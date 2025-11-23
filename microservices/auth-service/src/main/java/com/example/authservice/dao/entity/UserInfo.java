@@ -16,8 +16,9 @@ public class UserInfo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
     private String name;
+    @jakarta.persistence.Column(unique = true)
     private String email;
     private String password;
     private String roles;

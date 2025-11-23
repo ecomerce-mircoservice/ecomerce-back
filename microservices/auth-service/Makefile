@@ -6,7 +6,7 @@ IMAGE_NAME=$(REGISTRY_URL)/$(APP_NAME)
 JAR_FILE=target/$(APP_NAME)-$(VERSION).jar
 
 # Default target
-all: build jar docker
+all: build jar docker run
 
 # 1️⃣ Build the project (Maven)
 build:
@@ -22,6 +22,10 @@ jar:
 docker:
 	@echo "🐳 Building Docker image..."
 	docker build -t $(IMAGE_NAME):latest .
+
+run:
+	@echo "🚀 Running Docker container..."
+	docker run -d --name $(APP_NAME) -p 8081:8081 -e JWT_SECRET=jIEV9Mqf0YgAgL44LINbpflARa/KVQ8zG0Dg2z1wHt4= $(IMAGE_NAME):latest
 
 # 4️⃣ Push Docker image (optional)
 push:
