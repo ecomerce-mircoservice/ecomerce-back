@@ -6,7 +6,7 @@ IMAGE_NAME=$(REGISTRY_URL)/$(APP_NAME)
 JAR_FILE=target/$(APP_NAME)-$(VERSION).jar
 
 # Default target
-all: build jar docker
+all: run-compose build jar docker run
 
 # 1️⃣ Build the project (Maven)
 build:
@@ -23,6 +23,11 @@ docker:
 	@echo "🐳 Building Docker image..."
 	docker build -t $(IMAGE_NAME):latest .
 
+# Run Docker container
+run:
+	@echo "🚀 Running Docker container..."
+	docker run -d --name $(APP_NAME) -p 8081:8081 $(IMAGE_NAME):latest	
+
 # 4️⃣ Push Docker image (optional)
 push:
 	@echo "🚀 Pushing Docker image..."
@@ -33,3 +38,14 @@ clean:
 	@echo "🧹 Cleaning..."
 	./mvnw clean
 	docker rmi $(IMAGE_NAME):latest || true
+
+# Stop Docker container
+stop:
+	@echo "🛑 Stopping Docker container..."
+	docker stop $(APP_NAME) || true
+# Run the docker-compose
+run-compose:
+	@echo "🚀 Running docker-compose..."
+	docker-compose up -d	
+
+

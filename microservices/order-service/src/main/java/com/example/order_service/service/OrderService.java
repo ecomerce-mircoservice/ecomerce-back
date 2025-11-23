@@ -72,10 +72,13 @@ public class OrderService {
             // Fetch product details
             ProductDTO product = productServiceClient.getProductById(itemDTO.getProductId());
 
+            // Check if product is available
+            if (product.getStockQuantity() < itemDTO.getQuantity()) {
+                throw new RuntimeException("Product " + product.getName() + " is not available in sufficient quantity");
+            }
             // Create order item
             OrderItem orderItem = new OrderItem();
             orderItem.setProductId(product.getId());
-            orderItem.setProductName(product.getName());
             orderItem.setQuantity(itemDTO.getQuantity());
             orderItem.setPrice(product.getPrice());
 
@@ -139,7 +142,6 @@ public class OrderService {
         List<OrderItemDTO> items = order.getOrderItems().stream()
                 .map(item -> new OrderItemDTO(
                 item.getProductId(),
-                item.getProductName(),
                 item.getQuantity()
         ))
                 .collect(Collectors.toList());
