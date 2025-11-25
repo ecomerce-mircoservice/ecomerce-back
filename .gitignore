@@ -138,3 +138,6 @@ yarn-error.log*
 # System Files
 .DS_Store
 Thumbs.db
+
+# Frontend Folder
+front
