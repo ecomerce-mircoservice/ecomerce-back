@@ -31,4 +31,20 @@ public class FileStorageService {
         // Return relative path: "uploads/xxxx.png"
         return uploadDir + "/" + fileName;
     }
+
+    public boolean deleteFile(String filePath) {
+        try {
+            // Extract just the filename from the path (e.g., "uploads/123_file.png" -> "123_file.png")
+            String fileName = filePath.replace(uploadDir + "/", "");
+            Path fileToDelete = Paths.get(uploadDir).resolve(fileName);
+            
+            if (Files.exists(fileToDelete)) {
+                Files.delete(fileToDelete);
+                return true;
+            }
+            return false;
+        } catch (IOException e) {
+            return false;
+        }
+    }
 }

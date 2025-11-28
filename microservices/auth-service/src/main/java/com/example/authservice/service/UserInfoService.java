@@ -49,4 +49,43 @@ public class UserInfoService implements UserDetailsService {
         return userInfoRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
     }
+
+    // Get all users
+    public java.util.List<UserInfo> getAllUsers() {
+        return userInfoRepository.findAll();
+    }
+
+    // Get all users with pagination and search
+    public org.springframework.data.domain.Page<UserInfo> getAllUsersPaginated(int page, int size, String search) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        return userInfoRepository.findAllWithSearch(search, pageable);
+    }
+
+    // Get user by id
+    public UserInfo getUserById(Integer id) {
+        return userInfoRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
+    }
+
+    // Update user
+    public UserInfo updateUser(Integer id, UserInfo userInfo) {
+        UserInfo existingUser = getUserById(id);
+        existingUser.setName(userInfo.getName());
+        if (userInfo.getEmail() != null) {
+            existingUser.setEmail(userInfo.getEmail());
+        }
+        if (userInfo.getPassword() != null && !userInfo.getPassword().isEmpty()) {
+            existingUser.setPassword(passwordEncoder.encode(userInfo.getPassword()));
+        }
+        if (userInfo.getRoles() != null) {
+            existingUser.setRoles(userInfo.getRoles());
+        }
+        return userInfoRepository.save(existingUser);
+    }
+
+    // Delete user
+    public void deleteUser(Integer id) {
+        UserInfo user = getUserById(id);
+        userInfoRepository.delete(user);
+    }
 }

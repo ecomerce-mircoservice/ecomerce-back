@@ -45,6 +45,8 @@ public class Product {
     @Column(nullable = false)
     private Boolean active = true;
 
+    private Double rating;
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 

@@ -1,7 +1,5 @@
 package com.example.order_service.dto;
 
-import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,9 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateOrderRequest {
+public class AddToCartRequest {
 
-    private Long customerId;
-    private List<OrderItemDTO> items;
-    private ShippingAddress shippingAddress;
+    private Long userId;
+    private Long productId;
+    private Integer quantity;
 }

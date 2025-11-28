@@ -1,5 +1,7 @@
 package com.example.authservice.controller;
 
+import java.util.Map;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -35,8 +37,8 @@ public class UserController {
         this.authenticationManager = authenticationManager;
     }
 
-    @PostMapping("/signup")
-    public ApiResponse<AuthResponse> signup(@RequestBody UserInfo userInfo) {
+    @PostMapping("/register")
+    public ApiResponse<AuthResponse> register(@RequestBody UserInfo userInfo) {
         UserInfo savedUser = userInfoService.addUser(userInfo);
         String token = jwtService.generateToken(savedUser.getEmail());
 
@@ -48,17 +50,17 @@ public class UserController {
         );
 
         AuthResponse authResponse = new AuthResponse(token, userDto);
-        return ApiResponse.success(authResponse, "User registered successfully");
+        return ApiResponse.success(authResponse, "Registration successful");
     }
 
     @PostMapping("/login")
     public ApiResponse<AuthResponse> login(@RequestBody AuthRequest authRequest) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
+                new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword())
         );
         if (authentication.isAuthenticated()) {
-            String token = jwtService.generateToken(authRequest.getUsername());
-            UserInfo user = userInfoService.getUserByEmail(authRequest.getUsername());
+            String token = jwtService.generateToken(authRequest.getEmail());
+            UserInfo user = userInfoService.getUserByEmail(authRequest.getEmail());
 
             UserInfoDto userDto = new UserInfoDto(
                     user.getId(),
@@ -89,6 +91,21 @@ public class UserController {
         );
 
         return ApiResponse.success(userDto, "User information retrieved successfully");
+    }
+
+
+    @PostMapping("/refresh-token")
+    public ApiResponse<Map<String, String>> refreshToken() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        // Generate a new token
+        String newToken = jwtService.generateToken(email);
+
+        return ApiResponse.success(
+                Map.of("token", newToken),
+                "Token refreshed successfully"
+        );
     }
 
 }

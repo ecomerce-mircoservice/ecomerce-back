@@ -33,6 +33,32 @@ spring:
             - JwtAuthenticationFilter
             - StripPrefix=2   # remove /api/v1 before forwarding
 
+        # Cart service (requires JWT) - part of order-service
+        - id: cart-service
+          uri: http://order-service:8080
+          predicates:
+            - Path=/api/v1/cart/**
+          filters:
+            - JwtAuthenticationFilter
+            - StripPrefix=2   # remove /api/v1 before forwarding
+
+        # User management (requires JWT and ADMIN role)
+        - id: user-management
+          uri: http://auth-service:8080
+          predicates:
+            - Path=/api/v1/users/**
+          filters:
+            - JwtAuthenticationFilter
+            - StripPrefix=2   # remove /api/v1 before forwarding
+
+        # File service for serving uploaded images (public access)
+        - id: file-service-uploads
+          uri: http://file-service:8080
+          predicates:
+            - Path=/uploads/**
+          filters:
+            - RewritePath=/uploads/(?<segment>.*), /uploads/$\{segment}
+
 # JWT Configuration
 jwt:
   secret: ${JWT_SECRET}

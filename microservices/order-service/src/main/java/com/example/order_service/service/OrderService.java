@@ -153,7 +153,8 @@ public class OrderService {
                 order.getTotalAmount(),
                 order.getStatus().name(),
                 items,
-                order.getShippingAddress()
+                order.getShippingAddress(),
+                order.getCreatedAt()
         );
     }
 }

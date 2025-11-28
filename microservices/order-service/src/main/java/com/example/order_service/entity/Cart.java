@@ -5,14 +5,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.example.order_service.dto.ShippingAddress;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,34 +20,25 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "carts")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Order {
+public class Cart {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String orderNumber;
+    @Column(nullable = false, unique = true)
+    private Long userId;
 
-    @Column(nullable = false)
-    private Long customerId;
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CartItem> items = new ArrayList<>();
 
-    @Column(nullable = false)
-    private BigDecimal totalAmount;
+    private BigDecimal total = BigDecimal.ZERO;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private OrderStatus status;
-
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> orderItems = new ArrayList<>();
-
-    @Embedded
-    private ShippingAddress shippingAddress;
+    private Integer itemCount = 0;
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -63,7 +49,6 @@ public class Order {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        orderNumber = "ORD-" + System.currentTimeMillis();
     }
 
     @PreUpdate
@@ -71,17 +56,29 @@ public class Order {
         updatedAt = LocalDateTime.now();
     }
 
-    public void addOrderItem(OrderItem item) {
-        orderItems.add(item);
-        item.setOrder(this);
+    public void addItem(CartItem item) {
+        items.add(item);
+        item.setCart(this);
+        recalculate();
     }
 
-    public enum OrderStatus {
-        PENDING,
-        CONFIRMED,
-        PROCESSING,
-        SHIPPED,
-        DELIVERED,
-        CANCELLED
+    public void removeItem(CartItem item) {
+        items.remove(item);
+        item.setCart(null);
+        recalculate();
+    }
+
+    public void clearItems() {
+        items.clear();
+        recalculate();
+    }
+
+    public void recalculate() {
+        this.total = items.stream()
+                .map(CartItem::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        this.itemCount = items.stream()
+                .mapToInt(CartItem::getQuantity)
+                .sum();
     }
 }

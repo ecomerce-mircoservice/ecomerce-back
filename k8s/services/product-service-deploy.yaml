@@ -16,12 +16,14 @@ spec:
       containers:
         - name: product-service
           image: ibrahimlboss/product-service:latest
-          imagePullPolicy: Always 
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:mysql://$(DB_HOST):$(DB_PORT)/$(DB_NAME_PRODUCT)?createDatabaseIfNotExist=true"
+            - name: FILE_SERVICE_URL
+              value: "$(FILE_SERVICE_URL)"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -36,7 +38,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: microservices-secrets
-                  key: RABBITMQ_USER  
+                  key: RABBITMQ_USER
             - name: RABBITMQ_PASS
               valueFrom:
                 secretKeyRef:

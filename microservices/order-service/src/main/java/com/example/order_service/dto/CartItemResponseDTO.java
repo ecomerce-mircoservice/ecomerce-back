@@ -1,6 +1,6 @@
 package com.example.order_service.dto;
 
-import java.util.List;
+import java.math.BigDecimal;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateOrderRequest {
+public class CartItemResponseDTO {
 
-    private Long customerId;
-    private List<OrderItemDTO> items;
-    private ShippingAddress shippingAddress;
+    private ProductDTO product;
+    private Integer quantity;
+    private BigDecimal subtotal;
 }

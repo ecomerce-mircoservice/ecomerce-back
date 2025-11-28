@@ -1,11 +1,10 @@
 services:
-
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - "5672:5672"      # AMQP port for Spring Boot
-      - "15672:15672"    # Management UI
+      - "5672:5672" # AMQP port for Spring Boot
+      - "15672:15672" # Management UI
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
@@ -21,14 +20,14 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - SERVER_PORT=8080
     depends_on:
-      - mysqlService  
+      - mysqlService
   gateway-service:
     build: ./gateway-service
     ports:
       - "8080:8080"
     environment:
       - JWT_SECRET=${JWT_SECRET}
-      - SERVER_PORT=8080  
+      - SERVER_PORT=8080
     depends_on:
       - auth-service
       - product-service
@@ -43,9 +42,10 @@ services:
       - RABBITMQ_HOST=${RABBITMQ_HOST}
       - RABBITMQ_PORT=${RABBITMQ_PORT}
       - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASS=${RABBITMQ_PASS}  
+      - RABBITMQ_PASS=${RABBITMQ_PASS}
+      - FILE_SERVICE_URL=${FILE_SERVICE_URL}
     depends_on:
-      - mysqlService 
+      - mysqlService
   order-service:
     build: ./order-service
     environment:
@@ -56,18 +56,26 @@ services:
       - RABBITMQ_HOST=${RABBITMQ_HOST}
       - RABBITMQ_PORT=${RABBITMQ_PORT}
       - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASS=${RABBITMQ_PASS}    
+      - RABBITMQ_PASS=${RABBITMQ_PASS}
       - PRODUCT_SERVICE_URL=http://product-service:8080
     depends_on:
       - mysqlService
+  file-service:
+    build: ./file-service
+    environment:
+      - SERVER_PORT=8080
+      - FILE_UPLOAD_DIR=uploads
+    volumes:
+      - file_uploads:/app/uploads
   mysqlService:
     image: mysql:8.0
     container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS}
     volumes:
-      - mysql_data:/var/lib/mysql 
+      - mysql_data:/var/lib/mysql
 
 volumes:
   rabbitmq_data:
   mysql_data:
+  file_uploads:

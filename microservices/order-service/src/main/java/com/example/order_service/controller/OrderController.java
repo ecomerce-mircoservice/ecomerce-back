@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.order_service.dto.ApiResponse;
 import com.example.order_service.dto.CreateOrderRequest;
 import com.example.order_service.dto.OrderDTO;
 import com.example.order_service.service.OrderService;
@@ -28,42 +29,48 @@ public class OrderController {
     private final OrderService orderService;
 
     @GetMapping
-    public ResponseEntity<List<OrderDTO>> getAllOrders() {
-        return ResponseEntity.ok(orderService.getAllOrders());
+    public ResponseEntity<ApiResponse<List<OrderDTO>>> getAllOrders() {
+        List<OrderDTO> orders = orderService.getAllOrders();
+        return ResponseEntity.ok(ApiResponse.success(orders, "Orders retrieved successfully"));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long id) {
-        return ResponseEntity.ok(orderService.getOrderById(id));
+    public ResponseEntity<ApiResponse<OrderDTO>> getOrderById(@PathVariable Long id) {
+        OrderDTO order = orderService.getOrderById(id);
+        return ResponseEntity.ok(ApiResponse.success(order, "Order retrieved successfully"));
     }
 
     @GetMapping("/number/{orderNumber}")
-    public ResponseEntity<OrderDTO> getOrderByOrderNumber(@PathVariable String orderNumber) {
-        return ResponseEntity.ok(orderService.getOrderByOrderNumber(orderNumber));
+    public ResponseEntity<ApiResponse<OrderDTO>> getOrderByOrderNumber(@PathVariable String orderNumber) {
+        OrderDTO order = orderService.getOrderByOrderNumber(orderNumber);
+        return ResponseEntity.ok(ApiResponse.success(order, "Order retrieved successfully"));
     }
 
     @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<OrderDTO>> getOrdersByCustomerId(@PathVariable Long customerId) {
-        return ResponseEntity.ok(orderService.getOrdersByCustomerId(customerId));
+    public ResponseEntity<ApiResponse<List<OrderDTO>>> getOrdersByCustomerId(@PathVariable Long customerId) {
+        List<OrderDTO> orders = orderService.getOrdersByCustomerId(customerId);
+        return ResponseEntity.ok(ApiResponse.success(orders, "Customer orders retrieved successfully"));
     }
 
     @PostMapping
-    public ResponseEntity<OrderDTO> createOrder(@RequestBody CreateOrderRequest request) {
+    public ResponseEntity<ApiResponse<OrderDTO>> createOrder(@RequestBody CreateOrderRequest request) {
+        OrderDTO order = orderService.createOrder(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(orderService.createOrder(request));
+                .body(ApiResponse.success(order, "Order created successfully"));
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<OrderDTO> updateOrderStatus(
+    public ResponseEntity<ApiResponse<OrderDTO>> updateOrderStatus(
             @PathVariable Long id,
             @RequestBody Map<String, String> statusUpdate) {
         String status = statusUpdate.get("status");
-        return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
+        OrderDTO order = orderService.updateOrderStatus(id, status);
+        return ResponseEntity.ok(ApiResponse.success(order, "Order status updated successfully"));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> cancelOrder(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> cancelOrder(@PathVariable Long id) {
         orderService.cancelOrder(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success(null, "Order cancelled successfully"));
     }
 }

@@ -1,6 +1,7 @@
 package com.example.order_service.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -18,5 +19,6 @@ public class OrderDTO {
     private BigDecimal totalAmount;
     private String status;
     private List<OrderItemDTO> items;
-    private String shippingAddress;
+    private ShippingAddress shippingAddress;
+    private LocalDateTime createdAt;
 }
