@@ -80,9 +80,9 @@ public class OrderService {
             OrderItem orderItem = new OrderItem();
             orderItem.setProductId(product.getId());
             orderItem.setQuantity(itemDTO.getQuantity());
-            orderItem.setPrice(product.getPrice());
+            orderItem.setPrice(itemDTO.getPrice());
 
-            BigDecimal subtotal = product.getPrice().multiply(BigDecimal.valueOf(itemDTO.getQuantity()));
+            BigDecimal subtotal = itemDTO.getPrice().multiply(BigDecimal.valueOf(itemDTO.getQuantity()));
             orderItem.setSubtotal(subtotal);
 
             order.addOrderItem(orderItem);
@@ -142,7 +142,8 @@ public class OrderService {
         List<OrderItemDTO> items = order.getOrderItems().stream()
                 .map(item -> new OrderItemDTO(
                 item.getProductId(),
-                item.getQuantity()
+                item.getQuantity(),
+                item.getPrice()
         ))
                 .collect(Collectors.toList());
 
