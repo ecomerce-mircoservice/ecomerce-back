@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@lombok.extern.slf4j.Slf4j
 public class ApiResponse<T> {
 
     private boolean success;
@@ -20,6 +21,7 @@ public class ApiResponse<T> {
 
     // Success response with data
     public static <T> ApiResponse<T> success(T data, String message) {
+        log.info("API Success: Code=200, Message={}", message);
         ApiResponse<T> response = new ApiResponse<>();
         response.setSuccess(true);
         response.setCode(200);
@@ -37,6 +39,7 @@ public class ApiResponse<T> {
 
     // Error response
     public static <T> ApiResponse<T> error(int code, String message) {
+        log.error("API Error: Code={}, Message={}", code, message);
         ApiResponse<T> response = new ApiResponse<>();
         response.setSuccess(false);
         response.setCode(code);

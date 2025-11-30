@@ -76,10 +76,19 @@ public class ProductController {
             @RequestParam("category") String category,
             @RequestParam(value = "active", defaultValue = "true") Boolean active,
             @RequestParam(value = "rating", required = false) Double rating,
-            @RequestPart("image") MultipartFile image) {
+            @RequestPart("mainImage") MultipartFile mainImage,
+            @RequestPart(value = "secondaryImages", required = false) List<MultipartFile> secondaryImages) {
 
-        // Upload image to file-service
-        String imageUrl = fileServiceClient.uploadFile(image);
+        // Upload main image to file-service
+        String mainImageUrl = fileServiceClient.uploadFile(mainImage);
+
+        // Upload secondary images
+        List<String> secondaryImageUrls = new java.util.ArrayList<>();
+        if (secondaryImages != null && !secondaryImages.isEmpty()) {
+            for (MultipartFile file : secondaryImages) {
+                secondaryImageUrls.add(fileServiceClient.uploadFile(file));
+            }
+        }
 
         // Create product request
         CreateProductRequest request = new CreateProductRequest(
@@ -87,7 +96,7 @@ public class ProductController {
                 category, active, rating
         );
 
-        ProductDTO createdProduct = productService.createProduct(request, imageUrl);
+        ProductDTO createdProduct = productService.createProduct(request, mainImageUrl, secondaryImageUrls);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(createdProduct, "Product created successfully"));
     }
@@ -102,12 +111,23 @@ public class ProductController {
             @RequestParam("category") String category,
             @RequestParam(value = "active", defaultValue = "true") Boolean active,
             @RequestParam(value = "rating", required = false) Double rating,
-            @RequestPart(value = "image", required = false) MultipartFile image) {
+            @RequestPart(value = "mainImage", required = false) MultipartFile mainImage,
+            @RequestPart(value = "secondaryImages", required = false) List<MultipartFile> secondaryImages,
+            @RequestParam(value = "keptSecondaryImages", required = false) List<String> keptSecondaryImages) {
 
-        // Upload new image to file-service if provided
-        String imageUrl = null;
-        if (image != null && !image.isEmpty()) {
-            imageUrl = fileServiceClient.uploadFile(image);
+        // Upload new main image to file-service if provided
+        String mainImageUrl = null;
+        if (mainImage != null && !mainImage.isEmpty()) {
+            mainImageUrl = fileServiceClient.uploadFile(mainImage);
+        }
+
+        // Upload new secondary images if provided
+        List<String> secondaryImageUrls = null;
+        if (secondaryImages != null && !secondaryImages.isEmpty()) {
+            secondaryImageUrls = new java.util.ArrayList<>();
+            for (MultipartFile file : secondaryImages) {
+                secondaryImageUrls.add(fileServiceClient.uploadFile(file));
+            }
         }
 
         // Create product request
@@ -116,7 +136,7 @@ public class ProductController {
                 category, active, rating
         );
 
-        ProductDTO updatedProduct = productService.updateProduct(id, request, imageUrl);
+        ProductDTO updatedProduct = productService.updateProduct(id, request, mainImageUrl, secondaryImageUrls, keptSecondaryImages);
         return ResponseEntity.ok(ApiResponse.success(updatedProduct, "Product updated successfully"));
     }
 

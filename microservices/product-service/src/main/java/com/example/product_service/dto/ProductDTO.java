@@ -17,7 +17,8 @@ public class ProductDTO {
     private BigDecimal price;
     private Integer stockQuantity;
     private String category;
-    private String imageUrl;
+    private String mainImage;
+    private java.util.List<String> secondaryImages;
     private Boolean active;
     private Double rating;
 }

@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ApiResponse.class);
+
     private boolean success;
     private int code;
     private String message;
@@ -28,6 +30,7 @@ public class ApiResponse<T> {
     }
 
     public static <T> ApiResponse<T> success(T data, String message) {
+        log.info("API Success: Code=200, Message={}", message);
         ApiResponse<T> response = new ApiResponse<>();
         response.success = true;
         response.code = 200;
@@ -37,6 +40,7 @@ public class ApiResponse<T> {
     }
 
     public static <T> ApiResponse<T> error(int code, String message) {
+        log.error("API Error: Code={}, Message={}", code, message);
         ApiResponse<T> response = new ApiResponse<>();
         response.success = false;
         response.code = code;

@@ -40,7 +40,11 @@ public class Product {
 
     private String category;
 
-    private String imageUrl;
+    private String mainImage;
+
+    @jakarta.persistence.ElementCollection
+    private java.util.List<String> secondaryImages;
+
 
     @Column(nullable = false)
     private Boolean active = true;

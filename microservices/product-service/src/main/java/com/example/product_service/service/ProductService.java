@@ -53,14 +53,15 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductDTO createProduct(CreateProductRequest request, String imageUrl) {
+    public ProductDTO createProduct(CreateProductRequest request, String mainImage, List<String> secondaryImages) {
         Product product = new Product();
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setStockQuantity(request.getStockQuantity());
         product.setCategory(request.getCategory());
-        product.setImageUrl(imageUrl);
+        product.setMainImage(mainImage);
+        product.setSecondaryImages(secondaryImages);
         product.setActive(Boolean.TRUE.equals(request.getActive()));
         product.setRating(request.getRating());
         
@@ -70,7 +71,7 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductDTO updateProduct(Long id, CreateProductRequest request, String imageUrl) {
+    public ProductDTO updateProduct(Long id, CreateProductRequest request, String mainImage, List<String> secondaryImages, List<String> keptSecondaryImages) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
 
@@ -80,16 +81,42 @@ public class ProductService {
         product.setStockQuantity(request.getStockQuantity());
         product.setCategory(request.getCategory());
         
-        // Only update image URL if a new one is provided
-        if (imageUrl != null && !imageUrl.isEmpty()) {
+        // Update main image if provided
+        if (mainImage != null && !mainImage.isEmpty()) {
             // Delete old image if it exists
-            String oldImageUrl = product.getImageUrl();
-            if (oldImageUrl != null && !oldImageUrl.isEmpty()) {
-                log.info("Deleting old image: {}", oldImageUrl);
-                fileServiceClient.deleteFile(oldImageUrl);
+            String oldMainImage = product.getMainImage();
+            if (oldMainImage != null && !oldMainImage.isEmpty()) {
+                log.info("Deleting old main image: {}", oldMainImage);
+                fileServiceClient.deleteFile(oldMainImage);
             }
-            product.setImageUrl(imageUrl);
+            product.setMainImage(mainImage);
         }
+
+        // Handle secondary images
+        List<String> currentSecondaryImages = product.getSecondaryImages();
+        List<String> finalSecondaryImages = new java.util.ArrayList<>();
+
+        // 1. Add kept images
+        if (keptSecondaryImages != null) {
+            finalSecondaryImages.addAll(keptSecondaryImages);
+        }
+
+        // 2. Add new images
+        if (secondaryImages != null) {
+            finalSecondaryImages.addAll(secondaryImages);
+        }
+
+        // 3. Delete images that are in current but NOT in kept (and obviously not in new)
+        if (currentSecondaryImages != null) {
+            for (String currentImg : currentSecondaryImages) {
+                if (keptSecondaryImages == null || !keptSecondaryImages.contains(currentImg)) {
+                    log.info("Deleting removed secondary image: {}", currentImg);
+                    fileServiceClient.deleteFile(currentImg);
+                }
+            }
+        }
+
+        product.setSecondaryImages(finalSecondaryImages);
         
         product.setActive(request.getActive());
         product.setRating(request.getRating());
@@ -167,7 +194,8 @@ public class ProductService {
                 product.getPrice(),
                 product.getStockQuantity(),
                 product.getCategory(),
-                product.getImageUrl(),
+                product.getMainImage(),
+                product.getSecondaryImages(),
                 product.getActive(),
                 product.getRating()
         );
