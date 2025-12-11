@@ -21,7 +21,7 @@ public class ProductServiceClient {
 
     public ProductDTO getProductById(Long productId) {
         try {
-            String url = productServiceUrl + "/api/products/" + productId;
+            String url = productServiceUrl + "/products/" + productId;
             return restTemplate.getForObject(url, ProductDTO.class);
         } catch (Exception e) {
             log.error("Error fetching product with id: {}", productId, e);
