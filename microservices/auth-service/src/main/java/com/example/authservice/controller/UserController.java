@@ -31,7 +31,8 @@ public class UserController {
 
     private final AuthenticationManager authenticationManager;
 
-    public UserController(UserInfoService userInfoService, JwtService jwtService, AuthenticationManager authenticationManager) {
+    public UserController(UserInfoService userInfoService, JwtService jwtService,
+            AuthenticationManager authenticationManager) {
         this.userInfoService = userInfoService;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
@@ -40,14 +41,13 @@ public class UserController {
     @PostMapping("/register")
     public ApiResponse<AuthResponse> register(@RequestBody UserInfo userInfo) {
         UserInfo savedUser = userInfoService.addUser(userInfo);
-        String token = jwtService.generateToken(savedUser.getEmail());
+        String token = jwtService.generateToken(savedUser.getEmail(), savedUser.getId());
 
         UserInfoDto userDto = new UserInfoDto(
                 savedUser.getId(),
                 savedUser.getName(),
                 savedUser.getEmail(),
-                savedUser.getRoles()
-        );
+                savedUser.getRoles());
 
         AuthResponse authResponse = new AuthResponse(token, userDto);
         return ApiResponse.success(authResponse, "Registration successful");
@@ -56,18 +56,16 @@ public class UserController {
     @PostMapping("/login")
     public ApiResponse<AuthResponse> login(@RequestBody AuthRequest authRequest) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword())
-        );
+                new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword()));
         if (authentication.isAuthenticated()) {
-            String token = jwtService.generateToken(authRequest.getEmail());
             UserInfo user = userInfoService.getUserByEmail(authRequest.getEmail());
+            String token = jwtService.generateToken(authRequest.getEmail(), user.getId());
 
             UserInfoDto userDto = new UserInfoDto(
                     user.getId(),
                     user.getName(),
                     user.getEmail(),
-                    user.getRoles()
-            );
+                    user.getRoles());
 
             AuthResponse authResponse = new AuthResponse(token, userDto);
             return ApiResponse.success(authResponse, "Login successful");
@@ -76,36 +74,21 @@ public class UserController {
         }
     }
 
-    @GetMapping("/me")
-    public ApiResponse<UserInfoDto> me() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-
-        UserInfo user = userInfoService.getUserByEmail(email);
-
-        UserInfoDto userDto = new UserInfoDto(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getRoles()
-        );
-
-        return ApiResponse.success(userDto, "User information retrieved successfully");
-    }
-
+    /* ... skipping 'me' endpoint ... */
 
     @PostMapping("/refresh-token")
     public ApiResponse<Map<String, String>> refreshToken() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
 
+        UserInfo user = userInfoService.getUserByEmail(email);
+
         // Generate a new token
-        String newToken = jwtService.generateToken(email);
+        String newToken = jwtService.generateToken(email, user.getId());
 
         return ApiResponse.success(
                 Map.of("token", newToken),
-                "Token refreshed successfully"
-        );
+                "Token refreshed successfully");
     }
 
 }

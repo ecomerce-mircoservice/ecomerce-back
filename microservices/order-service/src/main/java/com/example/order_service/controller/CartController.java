@@ -25,34 +25,63 @@ public class CartController {
     private final CartService cartService;
 
     @GetMapping("/current")
-    public ResponseEntity<ApiResponse<CartDTO>> getCurrentCart(@RequestParam Long userId) {
-        CartDTO cart = cartService.getCurrentUserCart(userId);
+    public ResponseEntity<ApiResponse<CartDTO>> getCurrentCart(
+            @org.springframework.web.bind.annotation.RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
+            @RequestParam(required = false) Long userId) {
+        Long finalUserId = headerUserId != null ? headerUserId : userId;
+        if (finalUserId == null)
+            throw new RuntimeException("User ID is required");
+
+        CartDTO cart = cartService.getCurrentUserCart(finalUserId);
         return ResponseEntity.ok(ApiResponse.success(cart, "Cart retrieved successfully"));
     }
 
     @PostMapping("/add")
-    public ResponseEntity<ApiResponse<CartDTO>> addToCart(@RequestBody AddToCartRequest request) {
-        CartDTO cart = cartService.addItemToCart(request.getUserId(), request);
+    public ResponseEntity<ApiResponse<CartDTO>> addToCart(
+            @org.springframework.web.bind.annotation.RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
+            @RequestBody AddToCartRequest request) {
+        Long finalUserId = headerUserId != null ? headerUserId : request.getUserId();
+        if (finalUserId == null)
+            throw new RuntimeException("User ID is required");
+
+        CartDTO cart = cartService.addItemToCart(finalUserId, request);
         return ResponseEntity.ok(ApiResponse.success(cart, "Item added to cart successfully"));
     }
 
     @PostMapping("/update")
-    public ResponseEntity<ApiResponse<CartDTO>> updateCartItem(@RequestBody AddToCartRequest request) {
-        CartDTO cart = cartService.updateCartItem(request.getUserId(), request);
+    public ResponseEntity<ApiResponse<CartDTO>> updateCartItem(
+            @org.springframework.web.bind.annotation.RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
+            @RequestBody AddToCartRequest request) {
+        Long finalUserId = headerUserId != null ? headerUserId : request.getUserId();
+        if (finalUserId == null)
+            throw new RuntimeException("User ID is required");
+
+        CartDTO cart = cartService.updateCartItem(finalUserId, request);
         return ResponseEntity.ok(ApiResponse.success(cart, "Cart item updated successfully"));
     }
 
     @DeleteMapping("/items/{productId}")
     public ResponseEntity<ApiResponse<CartDTO>> removeFromCart(
-            @RequestParam Long userId,
+            @org.springframework.web.bind.annotation.RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
+            @RequestParam(required = false) Long userId,
             @PathVariable Long productId) {
-        CartDTO cart = cartService.removeItemFromCart(userId, productId);
+        Long finalUserId = headerUserId != null ? headerUserId : userId;
+        if (finalUserId == null)
+            throw new RuntimeException("User ID is required");
+
+        CartDTO cart = cartService.removeItemFromCart(finalUserId, productId);
         return ResponseEntity.ok(ApiResponse.success(cart, "Item removed from cart successfully"));
     }
 
     @DeleteMapping("/clear")
-    public ResponseEntity<ApiResponse<CartDTO>> clearCart(@RequestParam Long userId) {
-        CartDTO cart = cartService.clearCart(userId);
+    public ResponseEntity<ApiResponse<CartDTO>> clearCart(
+            @org.springframework.web.bind.annotation.RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
+            @RequestParam(required = false) Long userId) {
+        Long finalUserId = headerUserId != null ? headerUserId : userId;
+        if (finalUserId == null)
+            throw new RuntimeException("User ID is required");
+
+        CartDTO cart = cartService.clearCart(finalUserId);
         return ResponseEntity.ok(ApiResponse.success(cart, "Cart cleared successfully"));
     }
 }

@@ -23,6 +23,7 @@ public class ProductServiceClient {
     @Value("${product.service.url}")
     private String productServiceUrl;
 
+    @io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker(name = "productServiceCircuitBreaker", fallbackMethod = "getProductByIdFallback")
     public ProductDTO getProductById(Long productId) {
         try {
             String url = productServiceUrl + "/products/" + productId;
@@ -32,8 +33,8 @@ public class ProductServiceClient {
                     url,
                     HttpMethod.GET,
                     null,
-                    new ParameterizedTypeReference<ApiResponse<ProductDTO>>() {}
-            );
+                    new ParameterizedTypeReference<ApiResponse<ProductDTO>>() {
+                    });
 
             // Return the data inside the wrapper
             if (response.getBody() != null && response.getBody().getData() != null) {
@@ -44,7 +45,20 @@ public class ProductServiceClient {
 
         } catch (Exception e) {
             log.error("Error fetching product with id: {}", productId, e);
-            throw new RuntimeException("Failed to fetch product details", e);
+            throw e; // Rethrow to trigger circuit breaker
         }
+    }
+
+    // Fallback method
+    public ProductDTO getProductByIdFallback(Long productId, Throwable t) {
+        log.warn("Fallback triggered for product id: {}. Reason: {}", productId, t.getMessage());
+        // Return a dummy/placeholder product or null to handle gracefully
+        ProductDTO fallback = new ProductDTO();
+        fallback.setId(productId);
+        fallback.setName("Product Unavailable");
+        fallback.setDescription("Temporarily unavailable");
+        fallback.setPrice(java.math.BigDecimal.ZERO);
+        fallback.setStockQuantity(0);
+        return fallback;
     }
 }

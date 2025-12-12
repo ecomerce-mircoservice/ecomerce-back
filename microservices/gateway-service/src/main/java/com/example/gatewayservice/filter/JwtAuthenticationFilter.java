@@ -49,12 +49,19 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
                     return onError(exchange, "Invalid or expired token", HttpStatus.UNAUTHORIZED);
                 }
 
-                // Extract username and add to request header for downstream services
+                // Extract username and userId and add to request header for downstream services
                 String username = jwtService.extractUsername(token);
-                ServerHttpRequest modifiedRequest = exchange.getRequest()
+                Integer userId = jwtService.extractUserId(token);
+
+                ServerHttpRequest.Builder requestBuilder = exchange.getRequest()
                         .mutate()
-                        .header("X-User-Name", username)
-                        .build();
+                        .header("X-User-Name", username);
+
+                if (userId != null) {
+                    requestBuilder.header("X-User-Id", String.valueOf(userId));
+                }
+
+                ServerHttpRequest modifiedRequest = requestBuilder.build();
 
                 return chain.filter(exchange.mutate().request(modifiedRequest).build());
 
