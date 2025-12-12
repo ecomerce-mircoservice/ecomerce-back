@@ -6,7 +6,9 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.JacksonJsonMessageConverter; // <--- NEW IMPORT (No '2')
+// Use the new Jackson 3 classes (No '2')
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
+import org.springframework.amqp.support.converter.JacksonJavaTypeMapper;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,10 +38,12 @@ public class RabbitMQConfig {
                 .with(PRODUCT_ROUTING_KEY);
     }
 
-    // 👇 UPDATED for Spring Boot 4.0 / Jackson 3
     @Bean
     public MessageConverter messageConverter() {
-        return new JacksonJsonMessageConverter();
+        JacksonJsonMessageConverter converter = new JacksonJsonMessageConverter();
+        // Fix for package mismatch: Force RabbitMQ to use the local class definition
+        converter.setTypePrecedence(JacksonJavaTypeMapper.TypePrecedence.INFERRED);
+        return converter;
     }
 
     @Bean
