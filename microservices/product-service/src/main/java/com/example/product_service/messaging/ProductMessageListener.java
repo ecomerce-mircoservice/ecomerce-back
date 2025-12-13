@@ -18,25 +18,47 @@ public class ProductMessageListener {
 
     @RabbitListener(queues = "product.queue")
     public void handleStockUpdate(ProductStockUpdateEvent event) {
-        log.info("Received stock update event: {}", event);
+        log.info("========================================");
+        log.info("📨 RECEIVED STOCK UPDATE EVENT");
+        log.info("   Product ID: {}", event.getProductId());
+        log.info("   Quantity: {}", event.getQuantityChanged());
+        log.info("   Operation: {}", event.getOperation());
+        log.info("========================================");
 
         try {
             if ("RESERVE".equals(event.getOperation())) {
+                log.info("🔒 Attempting to RESERVE {} units of Product ID {}",
+                        event.getQuantityChanged(), event.getProductId());
+
                 boolean reserved = productService.reserveStock(
                         event.getProductId(),
-                        event.getQuantityChanged()
-                );
+                        event.getQuantityChanged());
+
                 if (!reserved) {
-                    log.error("Failed to reserve stock for product: {}", event.getProductId());
+                    log.error("❌ FAILED to reserve stock for Product ID: {}", event.getProductId());
+                    log.error("   Reason: Insufficient stock available");
+                } else {
+                    log.info("✅ Successfully RESERVED {} units of Product ID {}",
+                            event.getQuantityChanged(), event.getProductId());
                 }
             } else if ("RELEASE".equals(event.getOperation())) {
+                log.info("🔓 Attempting to RELEASE {} units of Product ID {}",
+                        event.getQuantityChanged(), event.getProductId());
+
                 productService.releaseStock(
                         event.getProductId(),
-                        event.getQuantityChanged()
-                );
+                        event.getQuantityChanged());
+
+                log.info("✅ Successfully RELEASED {} units of Product ID {}",
+                        event.getQuantityChanged(), event.getProductId());
             }
+            log.info("========================================");
         } catch (Exception e) {
-            log.error("Error processing stock update event: {}", e.getMessage(), e);
+            log.error("========================================");
+            log.error("❌ ERROR processing stock update event");
+            log.error("   Product ID: {}", event.getProductId());
+            log.error("   Error: {}", e.getMessage(), e);
+            log.error("========================================");
         }
     }
 }

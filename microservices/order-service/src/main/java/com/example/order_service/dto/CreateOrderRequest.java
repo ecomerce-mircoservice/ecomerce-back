@@ -13,5 +13,5 @@ public class CreateOrderRequest {
 
     private Long customerId;
     private List<OrderItemDTO> items;
-    private ShippingAddress shippingAddress;
+    private String shippingAddress;
 }

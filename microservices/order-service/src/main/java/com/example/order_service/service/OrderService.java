@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.order_service.client.ProductServiceClient;
+import com.example.order_service.dto.CartDTO;
+import com.example.order_service.dto.CartItemResponseDTO;
 import com.example.order_service.dto.CreateOrderRequest;
 import com.example.order_service.dto.OrderCreatedEvent;
 import com.example.order_service.dto.OrderDTO;
@@ -27,135 +29,190 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OrderService {
 
-    private final OrderRepository orderRepository;
-    private final ProductServiceClient productServiceClient;
-    private final OrderMessagePublisher messagePublisher;
+        private final OrderRepository orderRepository;
+        private final ProductServiceClient productServiceClient;
+        private final OrderMessagePublisher messagePublisher;
+        private final CartService cartService;
 
-    public List<OrderDTO> getAllOrders() {
-        return orderRepository.findAll().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    public OrderDTO getOrderById(Long id) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
-        return convertToDTO(order);
-    }
-
-    public OrderDTO getOrderByOrderNumber(String orderNumber) {
-        Order order = orderRepository.findByOrderNumber(orderNumber)
-                .orElseThrow(() -> new RuntimeException("Order not found with number: " + orderNumber));
-        return convertToDTO(order);
-    }
-
-    public List<OrderDTO> getOrdersByCustomerId(Long customerId) {
-        return orderRepository.findByCustomerId(customerId).stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional
-    public OrderDTO createOrder(CreateOrderRequest request) {
-        log.info("Creating order for customer: {}", request.getCustomerId());
-
-        // Create order
-        Order order = new Order();
-        order.setCustomerId(request.getCustomerId());
-        order.setStatus(Order.OrderStatus.PENDING);
-        order.setShippingAddress(request.getShippingAddress());
-
-        BigDecimal totalAmount = BigDecimal.ZERO;
-
-        // Process order items
-        for (OrderItemDTO itemDTO : request.getItems()) {
-            // Fetch product details
-            ProductDTO product = productServiceClient.getProductById(itemDTO.getProductId());
-
-            // Check if product is available
-            if (product.getStockQuantity() < itemDTO.getQuantity()) {
-                throw new RuntimeException("Product " + product.getName() + " is not available in sufficient quantity");
-            }
-            // Create order item
-            OrderItem orderItem = new OrderItem();
-            orderItem.setProductId(product.getId());
-            orderItem.setQuantity(itemDTO.getQuantity());
-            orderItem.setPrice(itemDTO.getPrice());
-
-            BigDecimal subtotal = itemDTO.getPrice().multiply(BigDecimal.valueOf(itemDTO.getQuantity()));
-            orderItem.setSubtotal(subtotal);
-
-            order.addOrderItem(orderItem);
-            totalAmount = totalAmount.add(subtotal);
-
-            // Publish stock reservation event
-            messagePublisher.publishStockUpdate(
-                    new ProductStockUpdateEvent(product.getId(), itemDTO.getQuantity(), "RESERVE")
-            );
+        public List<OrderDTO> getAllOrders() {
+                return orderRepository.findAll().stream()
+                                .map(this::convertToDTO)
+                                .collect(Collectors.toList());
         }
 
-        order.setTotalAmount(totalAmount);
-        Order savedOrder = orderRepository.save(order);
-
-        // Publish order created event
-        messagePublisher.publishOrderCreated(
-                new OrderCreatedEvent(savedOrder.getId(), savedOrder.getOrderNumber(), savedOrder.getCustomerId())
-        );
-
-        log.info("Order created successfully: {}", savedOrder.getOrderNumber());
-        return convertToDTO(savedOrder);
-    }
-
-    @Transactional
-    public OrderDTO updateOrderStatus(Long id, String status) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
-
-        Order.OrderStatus newStatus = Order.OrderStatus.valueOf(status.toUpperCase());
-        order.setStatus(newStatus);
-
-        Order updatedOrder = orderRepository.save(order);
-        log.info("Order status updated: {} -> {}", order.getOrderNumber(), newStatus);
-
-        return convertToDTO(updatedOrder);
-    }
-
-    @Transactional
-    public void cancelOrder(Long id) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
-
-        order.setStatus(Order.OrderStatus.CANCELLED);
-        orderRepository.save(order);
-
-        // Release reserved stock
-        for (OrderItem item : order.getOrderItems()) {
-            messagePublisher.publishStockUpdate(
-                    new ProductStockUpdateEvent(item.getProductId(), item.getQuantity(), "RELEASE")
-            );
+        public OrderDTO getOrderById(Long id) {
+                Order order = orderRepository.findById(id)
+                                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+                return convertToDTO(order);
         }
 
-        log.info("Order cancelled: {}", order.getOrderNumber());
-    }
+        public OrderDTO getOrderByOrderNumber(String orderNumber) {
+                Order order = orderRepository.findByOrderNumber(orderNumber)
+                                .orElseThrow(() -> new RuntimeException("Order not found with number: " + orderNumber));
+                return convertToDTO(order);
+        }
 
-    private OrderDTO convertToDTO(Order order) {
-        List<OrderItemDTO> items = order.getOrderItems().stream()
-                .map(item -> new OrderItemDTO(
-                item.getProductId(),
-                item.getQuantity(),
-                item.getPrice()
-        ))
-                .collect(Collectors.toList());
+        public List<OrderDTO> getOrdersByCustomerId(Long customerId) {
+                return orderRepository.findByCustomerId(customerId).stream()
+                                .map(this::convertToDTO)
+                                .collect(Collectors.toList());
+        }
 
-        return new OrderDTO(
-                order.getId(),
-                order.getOrderNumber(),
-                order.getCustomerId(),
-                order.getTotalAmount(),
-                order.getStatus().name(),
-                items,
-                order.getShippingAddress(),
-                order.getCreatedAt()
-        );
-    }
+        @Transactional
+        public OrderDTO createOrder(CreateOrderRequest request) {
+                log.info("========================================");
+                log.info("📦 CREATING NEW ORDER for Customer ID: {}", request.getCustomerId());
+
+                // If items is null or empty, pull from cart
+                List<OrderItemDTO> orderItems = request.getItems();
+                boolean fromCart = (orderItems == null || orderItems.isEmpty());
+
+                if (fromCart) {
+                        log.info("🛒 No items provided - pulling from cart");
+                        CartDTO cart = cartService.getCurrentUserCart(request.getCustomerId());
+
+                        if (cart.getItems() == null || cart.getItems().isEmpty()) {
+                                log.error("❌ Cart is empty for user {}", request.getCustomerId());
+                                throw new RuntimeException("Cannot create order: Cart is empty");
+                        }
+
+                        // Convert cart items to order items
+                        orderItems = cart.getItems().stream()
+                                        .map(cartItem -> new OrderItemDTO(
+                                                        cartItem.getProduct().getId(),
+                                                        cartItem.getQuantity(),
+                                                        cartItem.getProduct().getPrice()))
+                                        .collect(Collectors.toList());
+
+                        log.info("✓ Retrieved {} items from cart", orderItems.size());
+                }
+
+                log.info("📋 Number of items in order: {}", orderItems.size());
+                log.info("========================================");
+
+                // Create order
+                Order order = new Order();
+                order.setCustomerId(request.getCustomerId());
+                order.setStatus(Order.OrderStatus.PENDING);
+                order.setShippingAddress(request.getShippingAddress());
+
+                BigDecimal totalAmount = BigDecimal.ZERO;
+
+                // Process order items
+                int itemNumber = 1;
+                for (OrderItemDTO itemDTO : orderItems) {
+                        log.info("Processing item {}/{}: Product ID {}", itemNumber++, orderItems.size(),
+                                        itemDTO.getProductId());
+
+                        // Fetch product details
+                        ProductDTO product = productServiceClient.getProductById(itemDTO.getProductId());
+                        log.info("  ✓ Product found: '{}' (Current stock: {})", product.getName(),
+                                        product.getStockQuantity());
+
+                        // Check if product is available
+                        if (product.getStockQuantity() < itemDTO.getQuantity()) {
+                                log.error("  ✗ INSUFFICIENT STOCK for product '{}': Available={}, Requested={}",
+                                                product.getName(), product.getStockQuantity(), itemDTO.getQuantity());
+                                throw new RuntimeException("Product " + product.getName()
+                                                + " is not available in sufficient quantity");
+                        }
+
+                        log.info("  ✓ Stock check passed: Ordering {} units", itemDTO.getQuantity());
+
+                        // Create order item
+                        OrderItem orderItem = new OrderItem();
+                        orderItem.setProductId(product.getId());
+                        orderItem.setQuantity(itemDTO.getQuantity());
+                        orderItem.setPrice(itemDTO.getPrice());
+
+                        BigDecimal subtotal = itemDTO.getPrice().multiply(BigDecimal.valueOf(itemDTO.getQuantity()));
+                        orderItem.setSubtotal(subtotal);
+                        log.info("  💰 Subtotal: ${}", subtotal);
+
+                        order.addOrderItem(orderItem);
+                        totalAmount = totalAmount.add(subtotal);
+
+                        // Publish stock reservation event
+                        log.info("  📤 Publishing STOCK RESERVATION event for Product ID {} (Quantity: {})",
+                                        product.getId(), itemDTO.getQuantity());
+                        messagePublisher.publishStockUpdate(
+                                        new ProductStockUpdateEvent(product.getId(), itemDTO.getQuantity(), "RESERVE"));
+                }
+
+                order.setTotalAmount(totalAmount);
+                Order savedOrder = orderRepository.save(order);
+
+                log.info("========================================");
+                log.info("💰 TOTAL ORDER AMOUNT: ${}", totalAmount);
+                log.info("✅ ORDER CREATED SUCCESSFULLY!");
+                log.info("📋 Order Number: {}", savedOrder.getOrderNumber());
+                log.info("📊 Order ID: {}", savedOrder.getId());
+                log.info("📍 Status: {}", savedOrder.getStatus());
+                log.info("========================================");
+
+                // Publish order created event
+                messagePublisher.publishOrderCreated(
+                                new OrderCreatedEvent(savedOrder.getId(), savedOrder.getOrderNumber(),
+                                                savedOrder.getCustomerId()));
+
+                // Clear cart if order was created from cart
+                if (fromCart) {
+                        log.info("🧹 Clearing cart for user {}", request.getCustomerId());
+                        cartService.clearCart(request.getCustomerId());
+                        log.info("✓ Cart cleared successfully");
+                }
+
+                return convertToDTO(savedOrder);
+        }
+
+        @Transactional
+        public OrderDTO updateOrderStatus(Long id, String status) {
+                Order order = orderRepository.findById(id)
+                                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+
+                Order.OrderStatus newStatus = Order.OrderStatus.valueOf(status.toUpperCase());
+                order.setStatus(newStatus);
+
+                Order updatedOrder = orderRepository.save(order);
+                log.info("Order status updated: {} -> {}", order.getOrderNumber(), newStatus);
+
+                return convertToDTO(updatedOrder);
+        }
+
+        @Transactional
+        public void cancelOrder(Long id) {
+                Order order = orderRepository.findById(id)
+                                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+
+                order.setStatus(Order.OrderStatus.CANCELLED);
+                orderRepository.save(order);
+
+                // Release reserved stock
+                for (OrderItem item : order.getOrderItems()) {
+                        messagePublisher.publishStockUpdate(
+                                        new ProductStockUpdateEvent(item.getProductId(), item.getQuantity(),
+                                                        "RELEASE"));
+                }
+
+                log.info("Order cancelled: {}", order.getOrderNumber());
+        }
+
+        private OrderDTO convertToDTO(Order order) {
+                List<OrderItemDTO> items = order.getOrderItems().stream()
+                                .map(item -> new OrderItemDTO(
+                                                item.getProductId(),
+                                                item.getQuantity(),
+                                                item.getPrice()))
+                                .collect(Collectors.toList());
+
+                return new OrderDTO(
+                                order.getId(),
+                                order.getOrderNumber(),
+                                order.getCustomerId(),
+                                order.getTotalAmount(),
+                                order.getStatus().name(),
+                                items,
+                                order.getShippingAddress(),
+                                order.getCreatedAt());
+        }
 }

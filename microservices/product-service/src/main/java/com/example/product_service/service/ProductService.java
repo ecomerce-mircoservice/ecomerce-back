@@ -64,14 +64,15 @@ public class ProductService {
         product.setSecondaryImages(secondaryImages);
         product.setActive(Boolean.TRUE.equals(request.getActive()));
         product.setRating(request.getRating());
-        
+
         Product savedProduct = productRepository.save(product);
         log.info("Product created with id: {}", savedProduct.getId());
         return convertToDTO(savedProduct);
     }
 
     @Transactional
-    public ProductDTO updateProduct(Long id, CreateProductRequest request, String mainImage, List<String> secondaryImages, List<String> keptSecondaryImages) {
+    public ProductDTO updateProduct(Long id, CreateProductRequest request, String mainImage,
+            List<String> secondaryImages, List<String> keptSecondaryImages) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
 
@@ -80,7 +81,7 @@ public class ProductService {
         product.setPrice(request.getPrice());
         product.setStockQuantity(request.getStockQuantity());
         product.setCategory(request.getCategory());
-        
+
         // Update main image if provided
         if (mainImage != null && !mainImage.isEmpty()) {
             // Delete old image if it exists
@@ -106,7 +107,8 @@ public class ProductService {
             finalSecondaryImages.addAll(secondaryImages);
         }
 
-        // 3. Delete images that are in current but NOT in kept (and obviously not in new)
+        // 3. Delete images that are in current but NOT in kept (and obviously not in
+        // new)
         if (currentSecondaryImages != null) {
             for (String currentImg : currentSecondaryImages) {
                 if (keptSecondaryImages == null || !keptSecondaryImages.contains(currentImg)) {
@@ -117,7 +119,7 @@ public class ProductService {
         }
 
         product.setSecondaryImages(finalSecondaryImages);
-        
+
         product.setActive(request.getActive());
         product.setRating(request.getRating());
 
@@ -140,15 +142,20 @@ public class ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
 
+        int previousStock = product.getStockQuantity();
+
         if (product.getStockQuantity() >= quantity) {
-            product.setStockQuantity(product.getStockQuantity() - quantity);
+            int newStock = product.getStockQuantity() - quantity;
+            product.setStockQuantity(newStock);
             productRepository.save(product);
-            log.info("Reserved {} units of product id: {}", quantity, productId);
+
+            log.info("📦 STOCK RESERVED for Product ID {}: {} units", productId, quantity);
+            log.info("   Previous stock: {} → New stock: {}", previousStock, newStock);
             return true;
         }
 
-        log.warn("Insufficient stock for product id: {}. Available: {}, Requested: {}",
-                productId, product.getStockQuantity(), quantity);
+        log.warn("⚠️  INSUFFICIENT STOCK for Product ID: {}", productId);
+        log.warn("   Available: {}, Requested: {}", product.getStockQuantity(), quantity);
         return false;
     }
 
@@ -180,8 +187,7 @@ public class ProductService {
                 productPage.getNumber() + 1,
                 productPage.getSize(),
                 productPage.getTotalElements(),
-                productPage.getTotalPages()
-        );
+                productPage.getTotalPages());
 
         return ApiResponse.success(products, "Products retrieved successfully", metadata);
     }
@@ -197,7 +203,6 @@ public class ProductService {
                 product.getMainImage(),
                 product.getSecondaryImages(),
                 product.getActive(),
-                product.getRating()
-        );
+                product.getRating());
     }
 }
