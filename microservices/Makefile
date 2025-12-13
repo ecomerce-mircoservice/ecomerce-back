@@ -4,6 +4,16 @@
 SERVICES=auth-service gateway-service product-service order-service file-service
 
 # ==========================
+# Individual Service Targets (Rebuild & Restart)
+# ==========================
+.PHONY: auth-service gateway-service product-service order-service file-service
+auth-service gateway-service product-service order-service file-service:
+	@echo "🔄 Rebuilding $@..."
+	cd $@ && make build
+	@echo "🐳 Rebuilding Docker image for $@..."
+	docker compose up -d --build --no-deps $@
+
+# ==========================
 # Default target
 # ==========================
 .PHONY: all
@@ -45,7 +55,16 @@ up:
 .PHONY: down
 down:
 	@echo "🛑 Stopping Docker Compose..."
+	@echo "🛑 Stopping Docker Compose..."
 	docker compose down
+
+# ==========================
+# 5️⃣ Clean Data (Volumes) -- For Database Reset
+# ==========================
+.PHONY: clean-data
+clean-data:
+	@echo "🧹 Removing containers and VOLUMES..."
+	docker compose down -v
 
 # ==========================
 # 5️⃣ Push Docker images to Docker Hub

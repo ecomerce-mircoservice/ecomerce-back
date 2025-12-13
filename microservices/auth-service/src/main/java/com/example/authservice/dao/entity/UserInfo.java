@@ -8,7 +8,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import jakarta.persistence.Table;
+
 @Entity
+@Table(name = "users_info")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

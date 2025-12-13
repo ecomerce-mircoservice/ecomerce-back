@@ -11,7 +11,7 @@ all: build jar docker run
 # 1️⃣ Build the project (Maven)
 build:
 	@echo "🔨 Building the Java project..."
-	JAVA_HOME="/c/Program Files/Java/jdk-21" ./mvnw clean package -DskipTests
+	mvn clean package -DskipTests
 
 # 2️⃣ Build JAR (already done by Maven build)
 jar:

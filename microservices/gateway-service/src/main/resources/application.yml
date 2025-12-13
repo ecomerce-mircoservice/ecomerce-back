@@ -24,14 +24,24 @@ spring:
             - JwtAuthenticationFilter
             - StripPrefix=2   # remove /api/v1 before forwarding
 
-        # Product service (requires JWT)
-        - id: product-service
+        # Product service (Public Read)
+        - id: product-service-public
           uri: http://product-service:8080
           predicates:
             - Path=/api/v1/products/**
+            - Method=GET
+          filters:
+            - StripPrefix=2
+
+        # Product service (Protected Write)
+        - id: product-service-write
+          uri: http://product-service:8080
+          predicates:
+            - Path=/api/v1/products/**
+            - Method=POST,PUT,DELETE
           filters:
             - JwtAuthenticationFilter
-            - StripPrefix=2   # remove /api/v1 before forwarding
+            - StripPrefix=2
 
         # Cart service (requires JWT) - part of order-service
         - id: cart-service

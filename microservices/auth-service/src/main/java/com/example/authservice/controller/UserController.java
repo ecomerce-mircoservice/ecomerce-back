@@ -74,7 +74,18 @@ public class UserController {
         }
     }
 
-    /* ... skipping 'me' endpoint ... */
+    @GetMapping("/me")
+    public ApiResponse<UserInfoDto> me() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        UserInfo user = userInfoService.getUserByEmail(email);
+        UserInfoDto userDto = new UserInfoDto(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getRoles());
+        return ApiResponse.success(userDto, "User details retrieved successfully");
+    }
 
     @PostMapping("/refresh-token")
     public ApiResponse<Map<String, String>> refreshToken() {
