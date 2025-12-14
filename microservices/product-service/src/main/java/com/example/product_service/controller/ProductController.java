@@ -70,7 +70,7 @@ public class ProductController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<ProductDTO>> createProduct(
             @RequestParam("name") String name,
-            @RequestParam("description") String description,
+            @RequestParam(value = "description", required = false) String description,
             @RequestParam("price") BigDecimal price,
             @RequestParam("stockQuantity") Integer stockQuantity,
             @RequestParam("category") String category,
@@ -93,8 +93,7 @@ public class ProductController {
         // Create product request
         CreateProductRequest request = new CreateProductRequest(
                 name, description, price, stockQuantity,
-                category, active, rating
-        );
+                category, active, rating);
 
         ProductDTO createdProduct = productService.createProduct(request, mainImageUrl, secondaryImageUrls);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -105,7 +104,7 @@ public class ProductController {
     public ResponseEntity<ApiResponse<ProductDTO>> updateProduct(
             @PathVariable Long id,
             @RequestParam("name") String name,
-            @RequestParam("description") String description,
+            @RequestParam(value = "description", required = false) String description,
             @RequestParam("price") BigDecimal price,
             @RequestParam("stockQuantity") Integer stockQuantity,
             @RequestParam("category") String category,
@@ -133,10 +132,10 @@ public class ProductController {
         // Create product request
         CreateProductRequest request = new CreateProductRequest(
                 name, description, price, stockQuantity,
-                category, active, rating
-        );
+                category, active, rating);
 
-        ProductDTO updatedProduct = productService.updateProduct(id, request, mainImageUrl, secondaryImageUrls, keptSecondaryImages);
+        ProductDTO updatedProduct = productService.updateProduct(id, request, mainImageUrl, secondaryImageUrls,
+                keptSecondaryImages);
         return ResponseEntity.ok(ApiResponse.success(updatedProduct, "Product updated successfully"));
     }
 
@@ -154,8 +153,7 @@ public class ProductController {
         Map<String, Object> result = Map.of(
                 "reserved", reserved,
                 "productId", id,
-                "quantity", quantity
-        );
+                "quantity", quantity);
         String message = reserved ? "Stock reserved successfully" : "Insufficient stock";
         return ResponseEntity.ok(ApiResponse.success(result, message));
     }
