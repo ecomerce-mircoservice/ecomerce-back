@@ -1,6 +1,6 @@
 # 🛒 Mini E-Commerce Microservices
 
-A cloud-native e-commerce platform built with microservices architecture, Spring Boot, and Kubernetes.
+A production-ready e-commerce platform built with microservices architecture, Spring Boot, Docker, and comprehensive observability.
 
 ## 📋 Table of Contents
 
@@ -8,29 +8,28 @@ A cloud-native e-commerce platform built with microservices architecture, Spring
 - [Architecture](#architecture)
 - [Microservices](#microservices)
 - [Technology Stack](#technology-stack)
+- [Observability](#observability)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
-- [Project Structure](#project-structure)
-- [Deployment](#deployment)
-- [Monitoring & Observability](#monitoring--observability)
-- [Development](#development)
 - [API Documentation](#api-documentation)
-- [Contributing](#contributing)
+- [Monitoring \u0026 Logging](#monitoring--logging)
 
 ## 🎯 Overview
 
-This project demonstrates a production-ready microservices architecture for an e-commerce platform. It includes user authentication, product catalog, inventory management, order processing, payment handling, and notifications.
+This project demonstrates a production-ready microservices architecture for an e-commerce platform with full observability. Features include user authentication, product catalog, shopping cart, order processing, and comprehensive monitoring and logging.
+
+### Key Features
+
+✅ **Microservices Architecture** - Independent, scalable services  
+✅ **API Gateway** - Single entry point with JWT authentication  
+✅ **Message Queue** - Asynchronous communication via RabbitMQ  
+✅ **Database per Service** - PostgreSQL for data isolation  
+✅ **Metrics Monitoring** - Prometheus + Grafana dashboards  
+✅ **Centralized Logging** - ELK Stack (Elasticsearch, Logstash, Kibana)  
+✅ **Containerization** - Docker Compose orchestration  
+✅ **Cart Management** - Shopping cart with automatic order creation  
 
 ## 🏗️ Architecture
-
-The system follows microservices architecture principles with:
-
-- **API Gateway**: Single entry point for all client requests
-- **Service Discovery**: Dynamic service registration and discovery
-- **Message Queue**: Asynchronous communication via RabbitMQ
-- **Database per Service**: Each microservice has its own database
-- **Monitoring**: Prometheus + Grafana for metrics, Loki for logs
-- **Containerization**: Docker containers orchestrated by Kubernetes
 
 ```
 ┌─────────────┐
@@ -38,64 +37,97 @@ The system follows microservices architecture principles with:
 └──────┬──────┘
        │
 ┌──────▼──────────┐
-│  API Gateway    │
+│  API Gateway    │ (JWT Auth)
+│   Port: 8080    │
 └────────┬────────┘
          │
-    ┌────┴────┬─────────┬─────────┬──────────┬──────────┐
-    │         │         │         │          │          │
-┌───▼───┐ ┌──▼──┐ ┌────▼────┐ ┌──▼───┐ ┌───▼────┐ ┌───▼────┐
-│ Auth  │ │Prod │ │Inventory│ │Order │ │Payment │ │Notify  │
-└───┬───┘ └──┬──┘ └────┬────┘ └──┬───┘ └───┬────┘ └───┬────┘
-    │        │         │         │         │          │
-    └────────┴─────────┴─────────┴─────────┴──────────┘
-                         │
-                    ┌────▼─────┐
-                    │ RabbitMQ │
-                    └──────────┘
+    ┌────┴────┬─────────┬─────────┬──────────┐
+    │         │         │         │          │
+┌───▼───┐ ┌──▼──┐ ┌────▼────┐ ┌──▼───┐ ┌───▼────┐
+│ Auth  │ │Prod │ │  Order  │ │ Cart │ │  File  │
+│ 8080  │ │8080 │ │  8080   │ │ 8080 │ │  8080  │
+└───┬───┘ └──┬──┘ └────┬────┘ └──┬───┘ └───┬────┘
+    │        │         │         │          │
+    └────────┴─────────┴─────────┴──────────┘
+                       │
+                  ┌────▼─────┐
+                  │ RabbitMQ │
+                  └──────────┘
+```
+
+### Observability Stack
+
+```
+Metrics:  Prometheus (9090) → Grafana (3001)
+Logs:     Services → Logstash (5000) → Elasticsearch (9200) → Kibana (5601)
 ```
 
 ## 🔧 Microservices
 
-| Service                  | Description                                | Port | Database         |
-| ------------------------ | ------------------------------------------ | ---- | ---------------- |
-| **Auth Service**         | User authentication & JWT token management | 8080 | MySQL            |
-| **Product Service**      | Product catalog & management               | 8080 | MySQL/PostgreSQL |
-| **Inventory Service**    | Stock management & availability            | 8080 | MySQL/PostgreSQL |
-| **Order Service**        | Order processing & management              | 8080 | MySQL/PostgreSQL |
-| **Payment Service**      | Payment processing & transactions          | 8080 | MySQL/PostgreSQL |
-| **Notification Service** | Email/SMS notifications                    | 8080 | -                |
-| **Gateway Service**      | API Gateway & routing                      | 8080 | -                |
+| Service | Description | Port | Database | Features |
+|---------|-------------|------|----------|----------|
+| **Auth Service** | User authentication \u0026 JWT tokens | 8080 | PostgreSQL | Registration, Login, JWT |
+| **Product Service** | Product catalog \u0026 management | 8080 | PostgreSQL | CRUD, Search, Categories |
+| **Order Service** | Order \u0026 cart management | 8080 | PostgreSQL | Cart, Orders, Stock sync |
+| **Gateway Service** | API Gateway \u0026 routing | 8080 | - | JWT validation, Routing |
+| **File Service** | File upload \u0026 storage | 8080 | - | Image uploads |
 
 ## 🛠️ Technology Stack
 
 ### Backend
-
-- **Framework**: Spring Boot 4.0.0
+- **Framework**: Spring Boot 3.2.3 / 4.0.0
 - **Language**: Java 21
 - **Build Tool**: Maven
 - **Security**: Spring Security + JWT
-- **Database**: MySQL
+- **Database**: PostgreSQL 16
 - **ORM**: Spring Data JPA
-- **Message Queue**: RabbitMQ
+- **Message Queue**: RabbitMQ 3
 
-### DevOps & Infrastructure
+### Observability
+- **Metrics**: Prometheus + Grafana
+- **Logging**: ELK Stack (Elasticsearch, Logstash, Kibana)
+- **Monitoring**: Spring Boot Actuator + Micrometer
 
+### DevOps
 - **Containerization**: Docker
-- **Orchestration**: Kubernetes
-- **Service Mesh**: (Optional) Istio
-- **Monitoring**: Prometheus + Grafana
-- **Logging**: Loki
-- **CI/CD**: GitHub Actions / Jenkins
+- **Orchestration**: Docker Compose
+- **CI/CD**: Make + Docker
+
+## 📊 Observability
+
+### Metrics (Prometheus + Grafana)
+
+**Access**: http://localhost:3001 (Grafana) | http://localhost:9090 (Prometheus)
+
+**What you get:**
+- HTTP request rates and response times
+- JVM metrics (memory, CPU, threads, GC)
+- Database connection pool stats
+- Custom business metrics
+
+**Pre-built Dashboards:**
+- Spring Boot Statistics (ID: 11378)
+- JVM Micrometer (ID: 4701)
+
+### Logs (ELK Stack)
+
+**Access**: http://localhost:5601 (Kibana) | http://localhost:9200 (Elasticsearch)
+
+**What you get:**
+- Centralized logs from all services
+- Fast search and filtering
+- Log correlation across services
+- Error tracking and analysis
+
+**Index Pattern**: `microservices-logs-*`
 
 ## 📦 Prerequisites
 
 - **Java 21+**
 - **Maven 3.8+**
-- **Docker & Docker Compose**
-- **Kubernetes** (Minikube/Docker Desktop/Cloud Provider)
-- **kubectl CLI**
-- **Helm 3+** (for installing RabbitMQ, Prometheus, etc.)
-- **MySQL 8+**
+- **Docker \u0026 Docker Compose**
+- **8GB+ RAM** (for ELK Stack)
+- **Make** (optional, for build commands)
 
 ## 🚀 Getting Started
 
@@ -103,186 +135,262 @@ The system follows microservices architecture principles with:
 
 ```bash
 git clone https://github.com/ibrahimGoumrane/mini-ecommerce-microservices.git
-cd mini-ecommerce-microservices
+cd mini-ecommerce-microservices/microservices
 ```
 
-### 2. Build All Microservices
+### 2. Configure Environment
 
-```bash
-# Build each microservice
-cd microservices/auth-service && mvn clean package && cd ../..
-cd microservices/gateway-service && mvn clean package && cd ../..
-cd microservices/product-service && mvn clean package && cd ../..
-cd microservices/inventory-service && mvn clean package && cd ../..
-cd microservices/order-service && mvn clean package && cd ../..
-cd microservices/payment-service && mvn clean package && cd ../..
-cd microservices/notification-service && mvn clean package && cd ../..
+Create `.env` file in `microservices/` directory:
+
+```env
+# Database
+DB_USER=postgres
+DB_PASS=postgres
+DB_NAME_AUTH=auth_db
+DB_NAME_PRODUCT=product_db
+DB_NAME_ORDER=order_db
+
+# RabbitMQ
+RABBITMQ_HOST=rabbitmq
+RABBITMQ_PORT=5672
+RABBITMQ_USER=admin
+RABBITMQ_PASS=admin
+
+# JWT
+JWT_SECRET=your-secret-key-here
+
+# Services
+PRODUCT_SERVICE_URL=http://product-service:8080
+FILE_SERVICE_URL=http://file-service:8080
 ```
 
-Or use the Makefile in each service:
+### 3. Start All Services
 
 ```bash
-cd microservices/auth-service && make build
+# Start infrastructure (database, message queue, monitoring)
+docker-compose up -d postgres rabbitmq prometheus grafana elasticsearch logstash kibana
+
+# Build and start microservices
+make product-service
+make order-service
+make auth-service
+make gateway-service
+make file-service
 ```
 
-### 3. Build Docker Images
+Or start everything at once:
 
 ```bash
-# Build all images
-cd microservices/auth-service && docker build -t auth-service:latest .
-cd microservices/gateway-service && docker build -t gateway-service:latest .
-# ... repeat for other services
+docker-compose up -d
 ```
 
-### 4. Deploy to Kubernetes
-
-#### Install Dependencies (Helm Charts)
+### 4. Verify Deployment
 
 ```bash
-# Add Helm repositories
-helm repo add bitnami https://charts.bitnami.com/bitnami
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo add grafana https://grafana.github.io/helm-charts
-helm repo update
+# Check all containers are running
+docker ps
 
-# Install RabbitMQ
-kubectl create namespace messaging
-helm install rabbitmq bitnami/rabbitmq -f k8s/rabbitmq/values.yaml -n messaging
-
-# Install Prometheus (optional)
-kubectl create namespace monitoring
-helm install prometheus prometheus-community/prometheus -f k8s/prometheus/values.yaml -n monitoring
-
-# Install Grafana (optional)
-helm install grafana grafana/grafana -f k8s/grafana/values.yaml -n monitoring
-
-# Install Loki (optional)
-helm install loki grafana/loki-stack -f k8s/loki/values.yaml -n monitoring
+# Check service health
+curl http://localhost:8081/actuator/health  # Product service
+curl http://localhost:8082/actuator/health  # Order service
 ```
 
-#### Deploy Microservices
+## 📚 API Documentation
 
-```bash
-# Create namespace
-kubectl create namespace ecommerce
+### Base URL
 
-# Deploy all services
-kubectl apply -f k8s/services/ -n ecommerce
-
-# Deploy ingress/gateway
-kubectl apply -f k8s/gateway/ -n ecommerce
+```
+http://localhost:8080/api/v1
 ```
 
-### 5. Verify Deployment
+### Authentication
 
 ```bash
-# Check pods
-kubectl get pods -n ecommerce
+# Register
+POST /api/v1/auth/register
+{
+  "username": "john",
+  "email": "john@example.com",
+  "password": "password123"
+}
 
-# Check services
-kubectl get svc -n ecommerce
+# Login
+POST /api/v1/auth/login
+{
+  "username": "john",
+  "password": "password123"
+}
+# Returns: { "token": "eyJhbGc..." }
+```
 
-# Check ingress
-kubectl get ingress -n ecommerce
+### Products
+
+```bash
+# List products
+GET /api/v1/products?page=1&limit=10
+
+# Get product
+GET /api/v1/products/{id}
+
+# Create product (multipart/form-data)
+POST /api/v1/products
+- name: "Laptop"
+- price: 999.99
+- stockQuantity: 50
+- category: "Electronics"
+- mainImage: <file>
+- description: "Optional description"
+- secondaryImages: <files> (optional)
+```
+
+### Cart \u0026 Orders
+
+```bash
+# Add to cart
+POST /api/v1/cart/add
+{
+  "userId": 1,
+  "productId": 5,
+  "quantity": 2
+}
+
+# View cart
+GET /api/v1/cart/current?userId=1
+
+# Create order from cart
+POST /api/v1/orders
+{
+  "customerId": 1,
+  "items": [],  # Empty = use cart items
+  "shippingAddress": "123 Main St, City"
+}
+```
+
+## 📊 Monitoring \u0026 Logging
+
+### Access Dashboards
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| **Grafana** | http://localhost:3001 | admin / admin |
+| **Prometheus** | http://localhost:9090 | - |
+| **Kibana** | http://localhost:5601 | - |
+| **RabbitMQ** | http://localhost:15672 | admin / admin |
+
+### Grafana Setup
+
+1. Login to http://localhost:3001
+2. Go to Dashboards → Import
+3. Enter dashboard ID: **11378** (Spring Boot)
+4. Select Prometheus datasource
+5. Repeat with ID: **4701** (JVM)
+
+### Kibana Setup
+
+1. Open http://localhost:5601
+2. Go to Management → Index Patterns
+3. Create pattern: `microservices-logs-*`
+4. Select `@timestamp` as time field
+5. View logs in Discover tab
+
+### Useful Kibana Queries
+
+```
+# View errors only
+level: "ERROR"
+
+# Logs from specific service
+service: "order-service"
+
+# Search in messages
+message: "order created"
+```
+
+## 🔄 Development Workflow
+
+### Build Single Service
+
+```bash
+cd microservices
+make product-service  # Builds and deploys product-service
+```
+
+### View Logs
+
+```bash
+# Service logs
+docker logs microservices-product-service-1 -f
+
+# All logs
+docker-compose logs -f
+```
+
+### Rebuild After Changes
+
+```bash
+# Rebuild specific service
+make product-service
+
+# Rebuild all
+docker-compose up -d --build
 ```
 
 ## 📁 Project Structure
 
 ```
 mini-ecommerce-microservices/
-├── microservices/              # All microservice applications
-│   ├── auth-service/          # Authentication & authorization
+├── microservices/
+│   ├── auth-service/          # Authentication
 │   ├── gateway-service/       # API Gateway
-│   ├── product-service/       # Product management
-│   ├── inventory-service/     # Inventory management
-│   ├── order-service/         # Order processing
-│   ├── payment-service/       # Payment processing
-│   └── notification-service/  # Notifications
-├── k8s/                       # Kubernetes manifests
-│   ├── services/              # Service deployments & services
-│   ├── gateway/               # Ingress configuration
-│   ├── rabbitmq/              # RabbitMQ Helm values
-│   ├── prometheus/            # Prometheus Helm values
-│   ├── grafana/               # Grafana Helm values
-│   └── loki/                  # Loki Helm values
+│   ├── product-service/       # Products
+│   ├── order-service/         # Orders \u0026 Cart
+│   ├── file-service/          # File uploads
+│   ├── monitoring/            # Prometheus \u0026 Grafana configs
+│   ├── logging/               # Logstash pipeline
+│   └── docker-compose.yaml    # All services
 ├── docs/                      # Documentation
 └── README.md
 ```
 
-## 🎯 Kubernetes Concepts Guide
+## 🎯 Key Features Explained
 
-| Concept             | Description                                                    | Analogy                         |
-| ------------------- | -------------------------------------------------------------- | ------------------------------- |
-| **Deployment YAML** | Defines what container image to run, replicas, ports, env vars | Recipe for your microservice    |
-| **Service YAML**    | Provides stable endpoint to access pods                        | Phone number for your app       |
-| **Ingress/Gateway** | Routes external traffic to appropriate services                | Receptionist directing visitors |
-| **Helm Chart**      | Package manager for Kubernetes configs                         | Pre-configured installation kit |
-| **ConfigMap**       | Non-sensitive configuration data                               | Settings file                   |
-| **Secret**          | Sensitive data (passwords, tokens)                             | Locked safe for credentials     |
+### Cart-Based Order Creation
 
-## 📊 Monitoring & Observability
+Orders can be created directly from cart without passing items:
 
-### Prometheus
-
-Access metrics at: `http://<minikube-ip>:30090`
-
-### Grafana
-
-Access dashboards at: `http://<minikube-ip>:30030`
-
-- Default credentials in `k8s/grafana/values.yaml`
-
-### Loki
-
-Centralized logging accessible through Grafana
-
-## 💻 Development
-
-### Running Locally (Without Kubernetes)
-
-Each microservice can be run independently:
-
-```bash
-cd microservices/auth-service
-./mvnw spring-boot:run
+```json
+POST /api/v1/orders
+{
+  "customerId": 1,
+  "shippingAddress": "123 Main St"
+}
 ```
 
-Make sure to configure database and RabbitMQ connections in `application.properties`.
+The system automatically:
+1. Retrieves items from user's cart
+2. Creates order with cart items
+3. Reserves stock via RabbitMQ
+4. Clears the cart
 
-### Adding a New Microservice
+### Stock Management
 
-1. Create service in `microservices/` directory
-2. Add Dockerfile
-3. Create Kubernetes manifests in `k8s/services/`
-4. Update this README
+When an order is created:
+1. Order service publishes `ProductStockUpdateEvent` to RabbitMQ
+2. Product service listens and reserves stock
+3. Stock quantity automatically decreases
+4. Detailed logs track the entire flow
 
-## 📚 API Documentation
+### Optional Fields
 
-Once deployed, access Swagger UI at:
-
-- Auth Service: `http://<gateway-url>/auth/swagger-ui.html`
-- Product Service: `http://<gateway-url>/products/swagger-ui.html`
-- ... (similar for other services)
-
-### Sample Endpoints
-
-```
-POST   /auth/register          - Register new user
-POST   /auth/login             - Login and get JWT token
-GET    /products               - List all products
-POST   /products               - Create new product
-GET    /orders                 - List orders
-POST   /orders                 - Create new order
-POST   /payments               - Process payment
-```
+Product `description` and `secondaryImages` are optional - create minimal products quickly!
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
 
 ## 📝 License
 
@@ -296,10 +404,13 @@ This project is licensed under the MIT License.
 
 ## 🙏 Acknowledgments
 
-- Spring Boot team for the excellent framework
-- Kubernetes community
+- Spring Boot team
+- Prometheus \u0026 Grafana communities
+- Elastic (ELK Stack)
 - All open-source contributors
 
 ---
 
-⭐ Star this repo if you find it helpful!
+⭐ **Star this repo if you find it helpful!**
+
+**Full observability stack with metrics, logs, and distributed tracing ready for production!** 🚀
