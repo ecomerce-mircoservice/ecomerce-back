@@ -20,5 +20,8 @@ public class ProductDTO {
     private String mainImage;
     private java.util.List<String> secondaryImages;
     private Boolean active;
-    private Double rating;
+    private Double averageRating;
+    private Integer reviewCount;
+    private java.time.LocalDateTime createdAt;
+    private java.time.LocalDateTime updatedAt;
 }

@@ -63,7 +63,8 @@ public class ProductService {
         product.setMainImage(mainImage);
         product.setSecondaryImages(secondaryImages);
         product.setActive(Boolean.TRUE.equals(request.getActive()));
-        product.setRating(request.getRating());
+        product.setAverageRating(0.0);
+        product.setReviewCount(0);
 
         Product savedProduct = productRepository.save(product);
         log.info("Product created with id: {}", savedProduct.getId());
@@ -121,7 +122,7 @@ public class ProductService {
         product.setSecondaryImages(finalSecondaryImages);
 
         product.setActive(request.getActive());
-        product.setRating(request.getRating());
+        // Rating isn't updated directly via product update anymore, handled via reviews
 
         Product updatedProduct = productRepository.save(product);
         log.info("Product updated with id: {}", updatedProduct.getId());
@@ -203,6 +204,9 @@ public class ProductService {
                 product.getMainImage(),
                 product.getSecondaryImages(),
                 product.getActive(),
-                product.getRating());
+                product.getAverageRating(),
+                product.getReviewCount(),
+                product.getCreatedAt(),
+                product.getUpdatedAt());
     }
 }

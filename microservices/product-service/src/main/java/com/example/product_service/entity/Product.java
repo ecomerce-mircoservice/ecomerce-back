@@ -45,11 +45,13 @@ public class Product {
     @jakarta.persistence.ElementCollection
     private java.util.List<String> secondaryImages;
 
-
     @Column(nullable = false)
     private Boolean active = true;
 
-    private Double rating;
+    private Double averageRating;
+
+    @Column
+    private Integer reviewCount = 0;
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
