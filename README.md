@@ -27,7 +27,7 @@ This project demonstrates a production-ready microservices architecture for an e
 ✅ **Metrics Monitoring** - Prometheus + Grafana dashboards  
 ✅ **Centralized Logging** - ELK Stack (Elasticsearch, Logstash, Kibana)  
 ✅ **Containerization** - Docker Compose orchestration  
-✅ **Cart Management** - Shopping cart with automatic order creation  
+✅ **Cart Management** - Shopping cart with automatic order creation
 
 ## 🏗️ Architecture
 
@@ -59,22 +59,23 @@ This project demonstrates a production-ready microservices architecture for an e
 
 ```
 Metrics:  Prometheus (9090) → Grafana (3001)
-Logs:     Services → Logstash (5000) → Elasticsearch (9200) → Kibana (5601)
+Logs:     Services → Logstash (5001) → Elasticsearch (9200) → Kibana (5601)
 ```
 
 ## 🔧 Microservices
 
-| Service | Description | Port | Database | Features |
-|---------|-------------|------|----------|----------|
-| **Auth Service** | User authentication \u0026 JWT tokens | 8080 | PostgreSQL | Registration, Login, JWT |
-| **Product Service** | Product catalog \u0026 management | 8080 | PostgreSQL | CRUD, Search, Categories |
-| **Order Service** | Order \u0026 cart management | 8080 | PostgreSQL | Cart, Orders, Stock sync |
-| **Gateway Service** | API Gateway \u0026 routing | 8080 | - | JWT validation, Routing |
-| **File Service** | File upload \u0026 storage | 8080 | - | Image uploads |
+| Service             | Description                           | Port | Database   | Features                 |
+| ------------------- | ------------------------------------- | ---- | ---------- | ------------------------ |
+| **Auth Service**    | User authentication \u0026 JWT tokens | 8080 | PostgreSQL | Registration, Login, JWT |
+| **Product Service** | Product catalog \u0026 management     | 8080 | PostgreSQL | CRUD, Search, Categories |
+| **Order Service**   | Order \u0026 cart management          | 8080 | PostgreSQL | Cart, Orders, Stock sync |
+| **Gateway Service** | API Gateway \u0026 routing            | 8080 | -          | JWT validation, Routing  |
+| **File Service**    | File upload \u0026 storage            | 8080 | -          | Image uploads            |
 
 ## 🛠️ Technology Stack
 
 ### Backend
+
 - **Framework**: Spring Boot 3.2.3 / 4.0.0
 - **Language**: Java 21
 - **Build Tool**: Maven
@@ -84,11 +85,13 @@ Logs:     Services → Logstash (5000) → Elasticsearch (9200) → Kibana (5601
 - **Message Queue**: RabbitMQ 3
 
 ### Observability
+
 - **Metrics**: Prometheus + Grafana
 - **Logging**: ELK Stack (Elasticsearch, Logstash, Kibana)
 - **Monitoring**: Spring Boot Actuator + Micrometer
 
 ### DevOps
+
 - **Containerization**: Docker
 - **Orchestration**: Docker Compose
 - **CI/CD**: Make + Docker
@@ -100,12 +103,14 @@ Logs:     Services → Logstash (5000) → Elasticsearch (9200) → Kibana (5601
 **Access**: http://localhost:3001 (Grafana) | http://localhost:9090 (Prometheus)
 
 **What you get:**
+
 - HTTP request rates and response times
 - JVM metrics (memory, CPU, threads, GC)
 - Database connection pool stats
 - Custom business metrics
 
 **Pre-built Dashboards:**
+
 - Spring Boot Statistics (ID: 11378)
 - JVM Micrometer (ID: 4701)
 
@@ -114,6 +119,7 @@ Logs:     Services → Logstash (5000) → Elasticsearch (9200) → Kibana (5601
 **Access**: http://localhost:5601 (Kibana) | http://localhost:9200 (Elasticsearch)
 
 **What you get:**
+
 - Centralized logs from all services
 - Fast search and filtering
 - Log correlation across services
@@ -270,12 +276,12 @@ POST /api/v1/orders
 
 ### Access Dashboards
 
-| Service | URL | Credentials |
-|---------|-----|-------------|
-| **Grafana** | http://localhost:3001 | admin / admin |
-| **Prometheus** | http://localhost:9090 | - |
-| **Kibana** | http://localhost:5601 | - |
-| **RabbitMQ** | http://localhost:15672 | admin / admin |
+| Service        | URL                    | Credentials   |
+| -------------- | ---------------------- | ------------- |
+| **Grafana**    | http://localhost:3001  | admin / admin |
+| **Prometheus** | http://localhost:9090  | -             |
+| **Kibana**     | http://localhost:5601  | -             |
+| **RabbitMQ**   | http://localhost:15672 | admin / admin |
 
 ### Grafana Setup
 
@@ -367,6 +373,7 @@ POST /api/v1/orders
 ```
 
 The system automatically:
+
 1. Retrieves items from user's cart
 2. Creates order with cart items
 3. Reserves stock via RabbitMQ
@@ -375,6 +382,7 @@ The system automatically:
 ### Stock Management
 
 When an order is created:
+
 1. Order service publishes `ProductStockUpdateEvent` to RabbitMQ
 2. Product service listens and reserves stock
 3. Stock quantity automatically decreases

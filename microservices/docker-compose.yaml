@@ -126,7 +126,7 @@ services:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
+      - "--config.file=/etc/prometheus/prometheus.yml"
     restart: unless-stopped
 
   grafana:
@@ -161,7 +161,7 @@ services:
     image: docker.elastic.co/logstash/logstash:8.11.0
     container_name: logstash
     ports:
-      - "5000:5000"
+      - "5001:5001"
     volumes:
       - ./logging/logstash/pipeline:/usr/share/logstash/pipeline
     depends_on:
@@ -186,4 +186,3 @@ volumes:
   prometheus_data:
   grafana_data:
   elasticsearch_data:
-
