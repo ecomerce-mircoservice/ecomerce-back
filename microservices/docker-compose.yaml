@@ -96,14 +96,15 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: postgres
+    env_file:
+      - .env
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
       DB_NAME_AUTH: ${DB_NAME_AUTH}
       DB_NAME_PRODUCT: ${DB_NAME_PRODUCT}
       DB_NAME_ORDER: ${DB_NAME_ORDER}
-      # Postgres doesn't natively support creating multiple DBs in one go via env vars
-      # We will map a script to init them
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh
