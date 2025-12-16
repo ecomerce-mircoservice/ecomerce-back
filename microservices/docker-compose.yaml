@@ -46,6 +46,8 @@ services:
         condition: service_started
       file-service:
         condition: service_started
+      payment-service:
+        condition: service_started
     restart: unless-stopped
   product-service:
     build: ./product-service
@@ -85,6 +87,22 @@ services:
       rabbitmq:
         condition: service_healthy
     restart: unless-stopped
+  payment-service:
+    build: ./payment-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${DB_NAME_PAYMENT}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASS}
+      - SERVER_PORT=8080
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_SUCCESS_URL=${STRIPE_SUCCESS_URL}
+      - STRIPE_CANCEL_URL=${STRIPE_CANCEL_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
   file-service:
     build: ./file-service
     environment:
@@ -104,6 +122,7 @@ services:
       DB_NAME_AUTH: ${DB_NAME_AUTH}
       DB_NAME_PRODUCT: ${DB_NAME_PRODUCT}
       DB_NAME_ORDER: ${DB_NAME_ORDER}
+      DB_NAME_PAYMENT: ${DB_NAME_PAYMENT}
 
     volumes:
       - postgres_data:/var/lib/postgresql/data

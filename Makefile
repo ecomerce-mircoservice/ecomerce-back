@@ -1,7 +1,7 @@
 # ==========================
 # List of services
 # ==========================
-SERVICES=auth-service gateway-service product-service order-service
+SERVICES=auth-service gateway-service product-service order-service payment-service
 
 # ==========================
 # Default target

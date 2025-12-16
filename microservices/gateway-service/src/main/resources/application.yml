@@ -13,7 +13,7 @@ spring:
           predicates:
             - Path=/api/v1/auth/**
           filters:
-            - StripPrefix=2   # remove /api/v1 before forwarding
+            - StripPrefix=2 # remove /api/v1 before forwarding
 
         # Order service (requires JWT)
         - id: order-service
@@ -22,7 +22,7 @@ spring:
             - Path=/api/v1/orders/**
           filters:
             - JwtAuthenticationFilter
-            - StripPrefix=2   # remove /api/v1 before forwarding
+            - StripPrefix=2 # remove /api/v1 before forwarding
 
         # Product service (Public Read)
         - id: product-service-public
@@ -50,7 +50,7 @@ spring:
             - Path=/api/v1/cart/**
           filters:
             - JwtAuthenticationFilter
-            - StripPrefix=2   # remove /api/v1 before forwarding
+            - StripPrefix=2 # remove /api/v1 before forwarding
 
         # User management (requires JWT and ADMIN role)
         - id: user-management
@@ -59,7 +59,16 @@ spring:
             - Path=/api/v1/users/**
           filters:
             - JwtAuthenticationFilter
-            - StripPrefix=2   # remove /api/v1 before forwarding
+            - StripPrefix=2 # remove /api/v1 before forwarding
+
+        # Payment service (requires JWT)
+        - id: payment-service
+          uri: http://payment-service:8080
+          predicates:
+            - Path=/api/v1/payments/**
+          filters:
+            - JwtAuthenticationFilter
+            - StripPrefix=2 # remove /api/v1 before forwarding
 
         # File service for serving uploaded images (public access)
         - id: file-service-uploads
@@ -67,7 +76,7 @@ spring:
           predicates:
             - Path=/uploads/**
           filters:
-            - RewritePath=/uploads/(?<segment>.*), /uploads/$\{segment}
+            - RewritePath=/uploads/(?<segment>.*), /uploads/${segment}
 
 # JWT Configuration
 jwt:
@@ -84,11 +93,13 @@ management:
     health:
       show-details: always
     prometheus:
-      enabled: true
-  metrics:
-    export:
-      prometheus:
+      access: READ_ONLY
+  prometheus:
+    metrics:
+      export:
         enabled: true
+
+  metrics:
     tags:
       application: gateway-service
     distribution:

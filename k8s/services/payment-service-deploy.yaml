@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: microservices
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      containers:
+        - name: payment-service
+          image: ibrahimlboss/payment-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://$(DB_HOST):$(DB_PORT)/$(DB_NAME_PAYMENT)?createDatabaseIfNotExist=true"
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: microservices-secrets
+                  key: DB_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: microservices-secrets
+                  key: DB_PASS
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: microservices-secrets
+                  key: JWT_SECRET
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: microservices-secrets
+                  key: STRIPE_SECRET_KEY
+            - name: STRIPE_SUCCESS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: microservices-config
+                  key: STRIPE_SUCCESS_URL
+            - name: STRIPE_CANCEL_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: microservices-config
+                  key: STRIPE_CANCEL_URL
+            - name: SERVER_PORT
+              value: "8080"
+          envFrom:
+            - configMapRef:
+                name: microservices-config

@@ -9,7 +9,10 @@ data:
   DB_NAME_AUTH: authdb
   DB_NAME_PRODUCT: productdb
   DB_NAME_ORDER: orderdb
+  DB_NAME_PAYMENT: paymentdb
   RABBITMQ_HOST: rabbitmq
   RABBITMQ_PORT: "5672"
   JWT_EXPIRATION: "3600000"
   FILE_SERVICE_URL: http://file-service:8080
+  STRIPE_SUCCESS_URL: http://localhost:3000/payment/success
+  STRIPE_CANCEL_URL: http://localhost:3000/payment/cancel

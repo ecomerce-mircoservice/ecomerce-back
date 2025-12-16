@@ -1,13 +1,13 @@
 # ==========================
 # List of services
 # ==========================
-SERVICES=auth-service gateway-service product-service order-service file-service
+SERVICES=auth-service gateway-service product-service order-service file-service payment-service
 
 # ==========================
 # Individual Service Targets (Rebuild & Restart)
 # ==========================
-.PHONY: auth-service gateway-service product-service order-service file-service
-auth-service gateway-service product-service order-service file-service:
+.PHONY: auth-service gateway-service product-service order-service file-service payment-service
+auth-service gateway-service product-service order-service file-service payment-service:
 	@echo "🔄 Rebuilding $@..."
 	cd $@ && make build
 	@echo "🐳 Rebuilding Docker image for $@..."
