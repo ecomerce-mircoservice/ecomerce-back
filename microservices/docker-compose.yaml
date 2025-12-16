@@ -143,7 +143,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ../globalconf/monitoring/docker/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
@@ -159,7 +159,7 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ../globalconf/monitoring/docker/grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       - prometheus
     restart: unless-stopped
@@ -183,7 +183,7 @@ services:
     ports:
       - "5001:5001"
     volumes:
-      - ./logging/logstash/pipeline:/usr/share/logstash/pipeline
+      - ../globalconf/logging/docker/logstash/pipeline:/usr/share/logstash/pipeline
     depends_on:
       - elasticsearch
     restart: unless-stopped
