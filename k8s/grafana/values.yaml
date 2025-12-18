@@ -1,5 +1,0 @@
-adminUser: admin
-adminPassword: admin
-service:
-  type: ClusterIP
-

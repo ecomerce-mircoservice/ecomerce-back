@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-script
+  namespace: microservices
+data:
+  init-postgres.sh: |
+    #!/bin/sh
+    set -e
+
+    # Create databases only if they do not exist
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+      CREATE DATABASE "$DB_NAME_AUTH";
+      CREATE DATABASE "$DB_NAME_PRODUCT";
+      CREATE DATABASE "$DB_NAME_ORDER";
+      CREATE DATABASE "$DB_NAME_PAYMENT";
+    EOSQL

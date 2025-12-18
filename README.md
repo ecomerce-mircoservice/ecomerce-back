@@ -201,6 +201,61 @@ curl http://localhost:8081/actuator/health  # Product service
 curl http://localhost:8082/actuator/health  # Order service
 ```
 
+## 🎯 Kubernetes Deployment (Alternative)
+
+For Kubernetes deployment with Minikube, see detailed instructions in [docs/README.md](docs/README.md).
+
+### Quick Start with Kubernetes
+
+```bash
+# Start Minikube
+minikube start --cpus=4 --memory=6000
+
+# Create namespace and configs
+kubectl apply -f k8s/config/namespace.yaml
+kubectl apply -f k8s/config/secrets.yaml -n microservices
+kubectl apply -f k8s/config/configmap.yaml -n microservices
+
+# Deploy all services (deployments + services)
+kubectl apply -f k8s/services/ -n microservices
+kubectl apply -f k8s/rabbitmq/ -n microservices
+
+# Deploy logging stack (ELK)
+kubectl apply -f k8s/logging/ -n microservices
+
+# Deploy monitoring stack (Prometheus + Grafana)
+kubectl apply -f k8s/monitoring/ -n microservices
+
+# Deploy ingress
+kubectl apply -f k8s/gateway/ingress.yaml -n microservices
+
+# Check deployment
+kubectl get pods -n microservices
+kubectl get svc -n microservices
+```
+
+### Access Services in Kubernetes
+
+```bash
+# Kibana (Logging Dashboard)
+minikube service kibana -n microservices
+# Access at http://127.0.0.1:<tunnel-port>
+
+# Grafana (Monitoring Dashboard)
+minikube service grafana -n microservices
+# Default credentials: admin / admin
+
+# Prometheus (Metrics)
+kubectl port-forward -n microservices svc/prometheus 9090:9090
+# Access at http://localhost:9090
+
+# Get Ingress IP for API access
+minikube ip
+# Access APIs at http://<minikube-ip>/api/v1/*
+```
+
+> **Note**: On Windows with Docker driver, use `minikube service` tunnels (http://127.0.0.1:port) instead of NodePort IPs. Keep terminal open while using tunnels.
+
 ## 📚 API Documentation
 
 ### Base URL

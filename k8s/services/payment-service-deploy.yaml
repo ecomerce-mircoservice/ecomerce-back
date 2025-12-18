@@ -21,7 +21,7 @@ spec:
             - containerPort: 8080
           env:
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:mysql://$(DB_HOST):$(DB_PORT)/$(DB_NAME_PAYMENT)?createDatabaseIfNotExist=true"
+              value: "jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME_PAYMENT)"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:

@@ -2,16 +2,21 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ecommerce-ingress
+  namespace: microservices
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
+  ingressClassName: nginx
   rules:
     - http:
         paths:
+          # All traffic goes through the gateway service
+          # Gateway handles routing to internal microservices
           - path: /
             pathType: Prefix
             backend:
               service:
                 name: api-gateway
                 port:
-                  number: 8080
+                  number: 80

@@ -4,8 +4,8 @@ metadata:
   name: microservices-config
   namespace: microservices
 data:
-  DB_HOST: mysqlservice
-  DB_PORT: "3306"
+  DB_HOST: postgres
+  DB_PORT: "5432"
   DB_NAME_AUTH: authdb
   DB_NAME_PRODUCT: productdb
   DB_NAME_ORDER: orderdb

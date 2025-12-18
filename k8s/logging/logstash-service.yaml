@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: logstash
+  namespace: microservices
+  labels:
+    app: logstash
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5001
+      targetPort: 5001
+      name: tcp-input
+  selector:
+    app: logstash
