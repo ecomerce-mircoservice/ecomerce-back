@@ -15,15 +15,16 @@ import lombok.extern.slf4j.Slf4j;
 public class ProductMessageListener {
 
     private final ProductService productService;
+    private static final String SEPARATOR = "========================================";
 
     @RabbitListener(queues = "product.queue")
     public void handleStockUpdate(ProductStockUpdateEvent event) {
-        log.info("========================================");
+        log.info(SEPARATOR);
         log.info("📨 RECEIVED STOCK UPDATE EVENT");
         log.info("   Product ID: {}", event.getProductId());
         log.info("   Quantity: {}", event.getQuantityChanged());
         log.info("   Operation: {}", event.getOperation());
-        log.info("========================================");
+        log.info(SEPARATOR);
 
         try {
             if ("RESERVE".equals(event.getOperation())) {
@@ -52,13 +53,13 @@ public class ProductMessageListener {
                 log.info("✅ Successfully RELEASED {} units of Product ID {}",
                         event.getQuantityChanged(), event.getProductId());
             }
-            log.info("========================================");
+            log.info(SEPARATOR);
         } catch (Exception e) {
-            log.error("========================================");
+            log.error(SEPARATOR);
             log.error("❌ ERROR processing stock update event");
             log.error("   Product ID: {}", event.getProductId());
             log.error("   Error: {}", e.getMessage(), e);
-            log.error("========================================");
+            log.error(SEPARATOR);
         }
     }
 }

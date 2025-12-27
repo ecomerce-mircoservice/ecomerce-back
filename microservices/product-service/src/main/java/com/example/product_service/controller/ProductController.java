@@ -35,7 +35,7 @@ public class ProductController {
     private final FileServiceClient fileServiceClient;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<?>> getAllProducts(
+    public ResponseEntity<ApiResponse<List<ProductDTO>>> getAllProducts(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String search,

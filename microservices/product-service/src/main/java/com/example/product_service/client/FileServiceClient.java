@@ -1,5 +1,7 @@
 package com.example.product_service.client;
 
+import com.example.product_service.exception.FileServiceException;
+
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +26,7 @@ public class FileServiceClient {
 
     private final RestTemplate restTemplate;
     @Value("${file.service.url}")
-    private String FILE_SERVICE_URL;
+    private String fileServiceUrl;
 
     public String uploadFile(MultipartFile file) {
         try {
@@ -43,23 +45,22 @@ public class FileServiceClient {
 
             @SuppressWarnings("unchecked")
             ResponseEntity<Map<String, String>> response = restTemplate.postForEntity(
-                    FILE_SERVICE_URL + "/files",
+                    fileServiceUrl + "/files",
                     requestEntity,
-                    (Class<Map<String, String>>) (Class<?>) Map.class
-            );
+                    (Class<Map<String, String>>) (Class<?>) Map.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                String path = (String) response.getBody().get("path");
+                String path = response.getBody().get("path");
                 log.info("File uploaded successfully: {}", path);
                 return path;
             } else {
                 log.error("Failed to upload file to file-service");
-                throw new RuntimeException("Failed to upload file");
+                throw new FileServiceException("Failed to upload file to file-service");
             }
 
         } catch (Exception e) {
             log.error("Error uploading file to file-service: {}", e.getMessage());
-            throw new RuntimeException("Error uploading file: " + e.getMessage());
+            throw new FileServiceException("Error uploading file: " + e.getMessage(), e);
         }
     }
 
@@ -78,11 +79,10 @@ public class FileServiceClient {
 
             @SuppressWarnings("unchecked")
             ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                    FILE_SERVICE_URL + "/files",
+                    fileServiceUrl + "/files",
                     org.springframework.http.HttpMethod.DELETE,
                     requestEntity,
-                    (Class<Map<String, Object>>) (Class<?>) Map.class
-            );
+                    (Class<Map<String, Object>>) (Class<?>) Map.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Boolean success = (Boolean) response.getBody().get("success");
@@ -95,7 +95,8 @@ public class FileServiceClient {
 
         } catch (Exception e) {
             log.error("Error deleting file from file-service: {}", e.getMessage());
-            // Don't throw exception, just log the error since deletion failure shouldn't block the update
+            // Don't throw exception, just log the error since deletion failure shouldn't
+            // block the update
         }
     }
 }

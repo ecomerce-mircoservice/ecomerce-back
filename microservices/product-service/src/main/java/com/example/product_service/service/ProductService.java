@@ -2,7 +2,6 @@ package com.example.product_service.service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,29 +26,30 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final FileServiceClient fileServiceClient;
+    private static final String PRODUCT_NOT_FOUND_MSG = "Product not found with id: ";
 
     public List<ProductDTO> getAllProducts() {
         return productRepository.findByActiveTrue().stream()
                 .map(this::convertToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public ProductDTO getProductById(Long id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException(PRODUCT_NOT_FOUND_MSG + id));
         return convertToDTO(product);
     }
 
     public List<ProductDTO> searchProducts(String name) {
         return productRepository.findByNameContainingIgnoreCase(name).stream()
                 .map(this::convertToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<ProductDTO> getProductsByCategory(String category) {
         return productRepository.findByCategory(category).stream()
                 .map(this::convertToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional
@@ -75,7 +75,7 @@ public class ProductService {
     public ProductDTO updateProduct(Long id, CreateProductRequest request, String mainImage,
             List<String> secondaryImages, List<String> keptSecondaryImages) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException(PRODUCT_NOT_FOUND_MSG + id));
 
         product.setName(request.getName());
         product.setDescription(request.getDescription());
@@ -132,7 +132,7 @@ public class ProductService {
     @Transactional
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException(PRODUCT_NOT_FOUND_MSG + id));
         product.setActive(false);
         productRepository.save(product);
         log.info("Product soft deleted with id: {}", id);
@@ -141,7 +141,7 @@ public class ProductService {
     @Transactional
     public boolean reserveStock(Long productId, Integer quantity) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+                .orElseThrow(() -> new RuntimeException(PRODUCT_NOT_FOUND_MSG + productId));
 
         int previousStock = product.getStockQuantity();
 
@@ -163,7 +163,7 @@ public class ProductService {
     @Transactional
     public void releaseStock(Long productId, Integer quantity) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+                .orElseThrow(() -> new RuntimeException(PRODUCT_NOT_FOUND_MSG + productId));
 
         product.setStockQuantity(product.getStockQuantity() + quantity);
         productRepository.save(product);
@@ -182,7 +182,7 @@ public class ProductService {
 
         List<ProductDTO> products = productPage.getContent().stream()
                 .map(this::convertToDTO)
-                .collect(Collectors.toList());
+                .toList();
 
         Map<String, Object> metadata = ApiResponse.createPaginationMetadata(
                 productPage.getNumber() + 1,
