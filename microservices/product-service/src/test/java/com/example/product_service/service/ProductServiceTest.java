@@ -35,7 +35,6 @@ class ProductServiceTest {
     private ProductService productService;
 
     private Product product;
-    private ProductDTO productDTO;
 
     @BeforeEach
     void setUp() {
@@ -47,9 +46,6 @@ class ProductServiceTest {
         product.setCategory("Electronics");
         product.setActive(true);
 
-        productDTO = new ProductDTO(
-                1L, "Test Product", null, BigDecimal.valueOf(100.0), 10, "Electronics",
-                null, null, true, null, null, null, null);
     }
 
     @Test
