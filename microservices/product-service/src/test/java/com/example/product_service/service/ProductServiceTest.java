@@ -1,8 +1,16 @@
 package com.example.product_service.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -15,8 +23,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import com.example.product_service.client.FileServiceClient;
+import com.example.product_service.dto.ApiResponse;
 import com.example.product_service.dto.CreateProductRequest;
 import com.example.product_service.dto.ProductDTO;
 import com.example.product_service.entity.Product;
@@ -45,7 +57,6 @@ class ProductServiceTest {
         product.setStockQuantity(10);
         product.setCategory("Electronics");
         product.setActive(true);
-
     }
 
     @Test
@@ -143,5 +154,59 @@ class ProductServiceTest {
 
         assertEquals(15, product.getStockQuantity()); // 10 + 5
         verify(productRepository, times(1)).save(product);
+    }
+
+    @Test
+    void searchProducts_ShouldReturnMatchingProducts() {
+        when(productRepository.findByNameContainingIgnoreCase("Test")).thenReturn(Arrays.asList(product));
+
+        List<ProductDTO> result = productService.searchProducts("Test");
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Test Product", result.get(0).getName());
+        verify(productRepository, times(1)).findByNameContainingIgnoreCase("Test");
+    }
+
+    @Test
+    void getProductsByCategory_ShouldReturnMatchingProducts() {
+        when(productRepository.findByCategory("Electronics")).thenReturn(Arrays.asList(product));
+
+        List<ProductDTO> result = productService.getProductsByCategory("Electronics");
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Electronics", result.get(0).getCategory());
+        verify(productRepository, times(1)).findByCategory("Electronics");
+    }
+
+    @Test
+    void getAllProductsPaginated_WhenNoSearch_ShouldReturnActiveProducts() {
+        Page<Product> productPage = new PageImpl<>(Arrays.asList(product));
+
+        when(productRepository.findByActiveTrue(any(Pageable.class))).thenReturn(productPage);
+
+        ApiResponse<List<ProductDTO>> response = productService.getAllProductsPaginated(1, 10, null);
+
+        assertNotNull(response);
+        assertEquals(1, response.getData().size());
+
+        // Assert Metadata if possible or verify interactions
+        verify(productRepository, times(1)).findByActiveTrue(any(Pageable.class));
+    }
+
+    @Test
+    void getAllProductsPaginated_WhenSearch_ShouldReturnFilteredProducts() {
+        Page<Product> productPage = new PageImpl<>(Arrays.asList(product));
+
+        when(productRepository.findByNameContainingIgnoreCaseAndActiveTrue(eq("Test"), any(Pageable.class)))
+                .thenReturn(productPage);
+
+        ApiResponse<List<ProductDTO>> response = productService.getAllProductsPaginated(1, 10, "Test");
+
+        assertNotNull(response);
+        assertEquals(1, response.getData().size());
+        verify(productRepository, times(1)).findByNameContainingIgnoreCaseAndActiveTrue(eq("Test"),
+                any(Pageable.class));
     }
 }
