@@ -23,6 +23,7 @@ import java.util.Map;
 public class ReviewController {
 
     private final ReviewService reviewService;
+    private static final String SUCCESS_KEY = "success";
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> createReview(
@@ -40,14 +41,14 @@ public class ReviewController {
             ReviewDTO review = reviewService.createReview(productId, userId, request);
 
             Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
+            response.put(SUCCESS_KEY, true);
             response.put("data", review);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
             log.error("Error creating review: {}", e.getMessage());
             Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
+            response.put(SUCCESS_KEY, false);
             response.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
@@ -64,7 +65,7 @@ public class ReviewController {
                 PageRequest.of(page, limit, Sort.by("createdAt").descending()));
 
         Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
+        response.put(SUCCESS_KEY, true);
 
         Map<String, Object> data = new HashMap<>();
         data.put("reviews", reviewPage.getContent());

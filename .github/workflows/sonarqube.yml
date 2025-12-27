@@ -1,0 +1,47 @@
+name: SonarQube analysis
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'microservices/product-service/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'microservices/product-service/**'
+  workflow_dispatch:
+
+permissions:
+  pull-requests: read
+
+jobs:
+  Analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+
+      - name: Build and analyze
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          cd microservices/product-service
+          mvn -B clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -P test \
+            -Dsonar.projectKey=Product-Service \
+            -Dsonar.projectName="Product Service" \
+            -Dsonar.projectBaseDir=. \
+            -Dsonar.sources=src/main/java \
+            -Dsonar.tests=src/test/java \
+            -Dsonar.java.binaries=target/classes \
+            -Dsonar.verbose=true
